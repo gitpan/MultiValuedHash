@@ -54,7 +54,7 @@ distribution files, including this ReadMe file, and type the following:
 
 	perl Makefile.PL
 	make
-#	make test -- well, normally you'd do that, but the file's not here yet
+	make test
 	make install
 
 The last step probably won't work if you are not the administrator of your 
@@ -77,7 +77,7 @@ this:
 Then you would want to run the included test program to make sure the module is 
 installed correctly.  Call it with:
 
-#	perl test.pl -- well, normally you'd do that, but the file's not here yet
+	perl test.pl
 
 Any existing POD is embedded in the module itself.  The Makefile probably 
 extracted it for you in the usual manner, or you can run a POD extractor on it 
@@ -93,15 +93,14 @@ support issues later, so that users of my modules can help each other with them.
 
 TO DO
 
-	* Add testing scripts.
-	* Remove gratuitous arguments from clone() and implement their functionality 
-	some other way.  This had already been done, but was reversed because 
-	calling code requires those arguments.
 	* Add a method like scan() to allow custom processing of the 
 	content using a passed in code ref.
+	* Add a method like is_equal() to allow easy comparison of two MVH objects.
 	* Add another method or three to export a human-readable list of 
 	the structure's contents, in html and/or plain text; there is one now.	
-	* Move the modules from Alpha to Beta status.
+	* Add more tests, in particular for the file reading/writing methods.
+	* I have no more ideas in this regard, but am open to suggestions.
+	* Get my other modules done.
 
 AUTHOR
 

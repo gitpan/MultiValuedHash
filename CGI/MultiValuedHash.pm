@@ -17,7 +17,7 @@ require 5.004;
 
 use strict;
 use vars qw($VERSION @ISA);
-$VERSION = '1.0501';
+$VERSION = '1.06';
 
 ######################################################################
 
@@ -33,13 +33,13 @@ $VERSION = '1.0501';
 
 =head2 Nonstandard Modules
 
-	Data::MultiValuedHash 1.05 (parent class)
+	Data::MultiValuedHash 1.06 (parent class)
 
 =cut
 
 ######################################################################
 
-use Data::MultiValuedHash 1.05;
+use Data::MultiValuedHash 1.06;
 @ISA = qw( Data::MultiValuedHash );
 
 ######################################################################
@@ -75,10 +75,8 @@ use Data::MultiValuedHash 1.05;
 	seek( FH, 0, 2 );
 	$params->to_file( \*FH );
 	seek( FH, 0, 0 );
-	until( eof( FH ) ) {
-		push( @record_list, CGI::MultiValuedHash->new( 
-			$case_insensitive, \*FH ) );
-	}
+	@record_list = 
+		@{CGI::MultiValuedHash->batch_from_file( \*FH, $case_insensitive )};
 	flock( FH, 8 );
 	close( FH );
 		
@@ -486,14 +484,14 @@ sub trim_bounding_whitespace {
 
 =head2 batch_to_file( FH, LIST[, DELIM[, VALSEP[, REC_DELIM[, EMPTY]]]]] )
 
-This batch function writes encoded MVH objects to the filehandle provided in 
-the first argument, FH.  The second argument, LIST, is an array ref containing 
-the MVH objects or hash refs to be written.  Symantecs are similar to calling 
-to_file( FH, * ) once on each MVH object; any remaining arguments are passed 
-on as is to to_file().  If any array elements aren't
-MVHs or HASH refs, they are disregarded.  This method returns
-1 on success, even if there are no objects to write.  It returns undef on a
-file-system error, even if some of the objects were written first.
+This batch function writes encoded MVH objects to the filehandle provided in the
+first argument, FH.  The second argument, LIST, is an array ref containing the
+MVH objects or hash refs to be written.  Symantecs are similar to calling
+to_file( FH, * ) once on each MVH object; any remaining arguments are passed on
+as is to to_file().  If any array elements aren't MVHs or HASH refs, they are
+disregarded.  This method returns 1 on success, even if there are no objects to
+write.  It returns undef on a file-system error, even if some of the objects were
+written first.
 
 =cut
 
@@ -523,17 +521,16 @@ sub batch_to_file {
 
 =head2 batch_from_file( FH, CASE[, MAX[, DELIM[, VALSEP[, REC_DELIM[, EMPTY]]]]] )
 
-This batch function reads encoded MVH objects from the filehandle provided in 
-the first argument, FH, and returns them in a list.  The second argument, CASE, 
-specifies whether the new MVH objects are case-insensitive or not.  The third 
-optional argument, MAX, specifies the maximum number of objects to read.
-  If that argument is undefined or less than 1, then all objects are read
-until the end-of-file is reached.  Symantecs are similar to calling 
-from_file( FH, * ) once on each MVH object; any remaining arguments are passed 
-on as is to from_file().  This method returns an ARRAY ref containing the new 
-records (as MVHs)
-on success, even if the end-of-file is reached before we find any records.  It
-returns undef on a file-system error, even if some records were read first.
+This batch function reads encoded MVH objects from the filehandle provided in the
+first argument, FH, and returns them in a list.  The second argument, CASE,
+specifies whether the new MVH objects are case-insensitive or not.  The third
+optional argument, MAX, specifies the maximum number of objects to read. If that
+argument is undefined or less than 1, then all objects are read until the
+end-of-file is reached.  Symantecs are similar to calling from_file( FH, * ) once
+on each MVH object; any remaining arguments are passed on as is to from_file(). 
+This method returns an ARRAY ref containing the new records (as MVHs) on success,
+even if the end-of-file is reached before we find any records.  It returns undef
+on a file-system error, even if some records were read first.
 
 =cut
 
@@ -579,6 +576,99 @@ sub batch_from_file {
 1;
 __END__
 
+=head1 THE DEFAULT URL-ENCODED FORMAT
+
+When the to_url_encoded_string() and from_url_encoded_string() methods and their 
+derivatives are used with the fewest number of arguments, they default to an 
+encoding format used in query strings, such as $ENV{QUERY_STRING}.  Normal query 
+strings look like this:
+
+	name=name&type=textfield&visible_title=What%27s+your+name%3f
+
+Here's another example with a multi-valued field (it is actually a single line, 
+but appears on two here for clarity:
+
+	name=color&type=popup_menu&values=red&values=green&values=blue&
+	values=chartreuse&visible_title=What%27s+your+favorite+colour%3f
+
+Some query strings are the result of ISINDEX queries, and they look different:
+
+	tell&me&about&stuff
+	
+Cookie strings such as $ENV{HTTP_COOKIE} are different yet and look like:
+
+	name=color; type=popup_menu; values=red&green&blue&chartreuse
+
+In the argument lists for the above methods, DELIM refers to the "&" in normal 
+query strings and the "; " in cookies, whereas VALSEP is meaningless with normal 
+query strings and is the "&" in "isindex" queries and cookie strings.
+
+=head1 THE DEFAULT FILE FORMAT
+
+When the to_file() and from_file() methods and their derivatives are used with 
+the fewest number of arguments, they default to an encoding format that is quite 
+easy for humans to read.  This common format is capable of storing an ordered 
+list of variable-length records where the fields of each record are stored in 
+name=value pairs, one field value per line.
+
+Each record can have different fields from the others, and each field can have
+either one or several values.  In the latter case, the field name is repeated for
+each value.  Records are delimited by lines that contain only a "=" and are
+otherwise empty.  The order of individual fields in the file doesn't matter, but
+the order of parts of multivalued fields does; this order is preserved.  
+
+All field names and values are url-escaped, so we are capable of storing binary
+data without corrupting it.
+
+The following example shows 4 MVH objects encoded in the default format:
+
+	=
+	name=name
+	type=textfield
+	visible_title=What%27s+your+name%3f
+	=
+	default=eenie
+	default=minie
+	name=words
+	type=checkbox_group
+	values=eenie
+	values=meenie
+	values=minie
+	values=moe
+	visible_title=What%27s+the+combination%3f
+	=
+	name=color
+	type=popup_menu
+	values=red
+	values=green
+	values=blue
+	values=chartreuse
+	visible_title=What%27s+your+favorite+colour%3f
+	=
+	type=submit
+
+It turns out that this file format is identical to that used by the Whitehead
+Genome Center's data exchange format, and can be manipulated and even databased
+using Boulderio utilities.  (That may not be url-escaped, however.)  See
+"http://www.genome.wi.mit.edu/genome_software/other/boulder.html" for further
+details.  
+
+Boulderio didn't turn up in any CPAN search, but I found out about it from
+Lincoln D. Stein's documentation for CGI.pm, which itself uses a file format
+identical to this module, when saving its state.
+
+=head2 SOME DEVELOPMENT HISTORY
+
+The file default format in question became known to me during a programming
+exercise where I was given an example file containing usernames and passwords and
+had to parse it.  I was informed at the time that this file format was common.  
+
+This functionality was created for my own use, as I stored html form descriptions 
+and user input from my CGI scripts in the file format.  Through independent
+development, my module gained the ability to store binary data safely through
+url-encoding (preserving white-space formatting among other benefits), and could
+store everything from multi-valued fields.
+
 =head1 AUTHOR
 
 Copyright (c) 1999-2001, Darren R. Duncan. All rights reserved. This module is
@@ -608,6 +698,6 @@ is easier to understand.
 
 =head1 SEE ALSO
 
-perl(1), Data::MultiValuedHash.
+perl(1), Data::MultiValuedHash, HTML::FormTemplate.
 
 =cut

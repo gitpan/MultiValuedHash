@@ -17,7 +17,7 @@ require 5.004;
 
 use strict;
 use vars qw($VERSION);
-$VERSION = '1.05';
+$VERSION = '1.06';
 
 ######################################################################
 
@@ -93,7 +93,7 @@ $VERSION = '1.05';
 		# returns ( age => 18, color => undef, pets => 'Cat' )
 	
 	$mv3 = $mvh->clone();  # make a duplicate of myself
-	$mv4 = $mvh->clone( 'pets', 1 );  # leave out the pets in this "clone"
+	$mv4 = $mvh->fetch_mvh( 'pets', 1 );  # leave out the pets in this "clone"
 	
 	@list = $mv3->keys();
 		# returns ('name','age','color','siblings','pets')
@@ -105,6 +105,9 @@ $VERSION = '1.05';
 		# 'Dog', 'Hamster', 'Cat' )
 	@num = $mv3->values_count();  # returns 9
 	
+	@list = $mvh->splice( 'Siblings', 2, 1, ['James'] );
+	# replaces 'Julia' with 'James'; returns ( 'Julia' )
+
 	$mv3->store_all( {
 		songs => ['this', 'that', 'and the other'],
 		pets => 'Fish',
@@ -238,18 +241,14 @@ sub _set_hash_with_nonhash_source {
 
 ######################################################################
 
-=head2 clone([ CLONE[, KEYS[, COMPLEMENT]] ])
+=head2 clone([ CLONE ])
 
 This method initializes a new object to have all of the same properties of the
 current object and returns it.  This new object can be provided in the optional
 argument CLONE (if CLONE is an object of the same class as the current object);
 otherwise, a brand new object of the current class is used.  Only object
 properties recognized by Data::MultiValuedHash are set in the clone; other
-properties are not changed.  If the optional arguments KEYS and COMPLEMENT are
-used, then the clone may not have all the keys that the parent does.  KEYS is an
-array ref that specifies a subset of all this object's keys that we want
-returned.  If the boolean COMPLEMENT is true, then the complement of the keys
-listed in KEYS is returned instead.
+properties are not changed.
 
 =cut
 
@@ -260,13 +259,9 @@ sub clone {
 	ref($clone) eq ref($self) or $clone = bless( {}, ref($self) );
 
 	my $rh_main_hash = $self->{$KEY_MAIN_HASH};
-	my %hash_copy = 
-		map { ( $_, [@{$rh_main_hash->{$_}}] ) } keys %{$rh_main_hash};
-	if( $args[0] ) {
-		$self->_reduce_hash_to_subset( \%hash_copy, @args );
-	}
+	$clone->{$KEY_MAIN_HASH} = 
+		{ map { ( $_, [@{$rh_main_hash->{$_}}] ) } keys %{$rh_main_hash} };
 
-	$clone->{$KEY_MAIN_HASH} = \%hash_copy;
 	$clone->{$KEY_CASE_INSE} = $self->{$KEY_CASE_INSE};
 	
 	return( $clone );
@@ -549,6 +544,27 @@ sub fetch_all {
 
 ######################################################################
 
+=head2 fetch_mvh([ KEYS[, COMPLEMENT[, INDEXES]] ])
+
+This method returns a new MVH object with all or a subset of this object's keys
+and values. It has the same calling conventions as fetch_all() except that an MVH
+object is returned instead of a literal hash.  The case-insensitivity attribute 
+of the new MVH is the same as the current one.
+
+=cut
+
+######################################################################
+
+sub fetch_mvh {
+	my $self = shift( @_ );
+	my $new_mvh = bless( {}, ref($self) );
+	$new_mvh->{$KEY_MAIN_HASH} = $self->fetch_all( @_ );
+	$new_mvh->{$KEY_CASE_INSE} = $self->{$KEY_CASE_INSE};
+	return( $new_mvh );
+}
+
+######################################################################
+
 =head2 store_value( KEY, VALUE[, INDEX] )
 
 This method adds a new KEY to this object, if it doesn't already exist.  The 
@@ -614,8 +630,8 @@ sub store_all {
 	my $rh_main_hash = $self->{$KEY_MAIN_HASH};
 	my $case_inse = $self->{$KEY_CASE_INSE};
 	foreach my $key (sort keys %new) {
-		$key = lc($key) if( $case_inse );
 		my @values = (ref($new{$key}) eq 'ARRAY') ? @{$new{$key}} : $new{$key};
+		$key = lc($key) if( $case_inse );
 		$rh_main_hash->{$key} = \@values;
 	}
 	return( scalar( keys %new ) );
@@ -720,8 +736,10 @@ sub splice {
 	my $length = shift( @_ );
 	my @values = (ref( $_[0] ) eq 'ARRAY') ? @{shift( @_ )} : @_;
 	$self->{$KEY_MAIN_HASH}->{$key} ||= [];
-	my @output = splice( @{$self->{$KEY_MAIN_HASH}->{$key}}, 
-		$offset, $length, @values );
+	# yes, an undef or () for $length is diff than it not being there at all
+	my @output = defined( $length ) ?   
+		splice( @{$self->{$KEY_MAIN_HASH}->{$key}}, $offset, $length, @values ) : 
+		splice( @{$self->{$KEY_MAIN_HASH}->{$key}}, $offset );
 	return( wantarray ? @output : \@output );
 }
 
@@ -851,6 +869,7 @@ fetch methods.
 		hash = fetch_first([ KEYS[, COMPLEMENT] ]) - index=0
 		hash = fetch_last([ KEYS[, COMPLEMENT] ])  - index=-1
 	mvh    = fetch_all([ KEYS[, COMPLEMENT[, INDEXES ]] ]) - keys=all,ind=all
+		mvh = fetch_mvh([ KEYS[, COMPLEMENT[, INDEXES ]] ]) - keys=all,ind=all
 
 	store_value( KEY, VALUE[, INDEX] ) - index=0
 	store( KEY, VALUES )
@@ -898,6 +917,6 @@ is easier to understand.
 
 =head1 SEE ALSO
 
-perl(1), CGI::MultiValuedHash.
+perl(1), CGI::MultiValuedHash, HTML::FormTemplate.
 
 =cut

@@ -4,3 +4,4 @@ Data/MultiValuedHash.pm
 Makefile.PL
 MANIFEST
 ReadMe
+test.pl
