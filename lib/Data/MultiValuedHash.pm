@@ -17,7 +17,7 @@ require 5.004;
 
 use strict;
 use vars qw($VERSION);
-$VERSION = '1.0702';
+$VERSION = '1.0703';
 
 ######################################################################
 
@@ -435,7 +435,8 @@ sub fetch {
 		return( wantarray ? () : undef );
 	my @values = @{$self->{$KEY_MAIN_HASH}->{$key}};
 	if( defined( $_[0] ) ) {
-		my @indexes = ref( $_[0] ) eq 'ARRAY' ? @{shift( @_ )} : CORE::shift( @_ );
+		my @indexes = 
+			ref( $_[0] ) eq 'ARRAY' ? @{CORE::shift( @_ )} : CORE::shift( @_ );
 		my %indexes = map { ($_ + 0, 1) } @indexes;  # clean up input
 		@indexes = sort (CORE::keys %indexes);
 		@values = @values[@indexes];
@@ -604,7 +605,7 @@ to pass an empty ARRAY ref as the VALUES.
 sub store {
 	my $self = CORE::shift( @_ );
 	my $key = $self->{$KEY_CASE_INSE} ? lc(CORE::shift(@_)) : CORE::shift(@_);
-	my @values = (ref( $_[0] ) eq 'ARRAY') ? @{shift( @_ )} : @_;
+	my @values = (ref( $_[0] ) eq 'ARRAY') ? @{CORE::shift( @_ )} : @_;
 	$self->{$KEY_MAIN_HASH}->{$key} = \@values;
 	return( scalar( @{$self->{$KEY_MAIN_HASH}->{$key}} ) );
 }
@@ -627,8 +628,8 @@ values with the same names are replaced.  New keys are added in the order of
 sub store_all {
 	my $self = CORE::shift( @_ );
 	my %new = UNIVERSAL::isa( $_[0], 'Data::MultiValuedHash' ) ? 
-		(%{shift( @_ )->{$KEY_MAIN_HASH}}) : 
-		(ref( $_[0] ) eq 'HASH') ? (%{shift( @_ )}) : @_;
+		(%{CORE::shift( @_ )->{$KEY_MAIN_HASH}}) : 
+		(ref( $_[0] ) eq 'HASH') ? (%{CORE::shift( @_ )}) : @_;
 	my $rh_main_hash = $self->{$KEY_MAIN_HASH};
 	my $case_inse = $self->{$KEY_CASE_INSE};
 	foreach my $key (sort (CORE::keys %new)) {
@@ -654,7 +655,7 @@ the new count of values that KEY has.
 sub push {
 	my $self = CORE::shift( @_ );
 	my $key = $self->{$KEY_CASE_INSE} ? lc(CORE::shift(@_)) : CORE::shift(@_);
-	my @values = (ref( $_[0] ) eq 'ARRAY') ? @{shift( @_ )} : @_;
+	my @values = (ref( $_[0] ) eq 'ARRAY') ? @{CORE::shift( @_ )} : @_;
 	$self->{$KEY_MAIN_HASH}->{$key} ||= [];
 	CORE::push( @{$self->{$KEY_MAIN_HASH}->{$key}}, @values );
 	return( scalar( @{$self->{$KEY_MAIN_HASH}->{$key}} ) );
@@ -675,7 +676,7 @@ the new count of values that KEY has.
 sub unshift {
 	my $self = CORE::shift( @_ );
 	my $key = $self->{$KEY_CASE_INSE} ? lc(CORE::shift(@_)) : CORE::shift(@_);
-	my @values = (ref( $_[0] ) eq 'ARRAY') ? @{shift( @_ )} : @_;
+	my @values = (ref( $_[0] ) eq 'ARRAY') ? @{CORE::shift( @_ )} : @_;
 	$self->{$KEY_MAIN_HASH}->{$key} ||= [];
 	CORE::unshift( @{$self->{$KEY_MAIN_HASH}->{$key}}, @values );
 	return( scalar( @{$self->{$KEY_MAIN_HASH}->{$key}} ) );
@@ -736,7 +737,7 @@ sub splice {
 	my $key = $self->{$KEY_CASE_INSE} ? lc(CORE::shift(@_)) : CORE::shift(@_);
 	my $offset = CORE::shift( @_ );
 	my $length = CORE::shift( @_ );
-	my @values = (ref( $_[0] ) eq 'ARRAY') ? @{shift( @_ )} : @_;
+	my @values = (ref( $_[0] ) eq 'ARRAY') ? @{CORE::shift( @_ )} : @_;
 	$self->{$KEY_MAIN_HASH}->{$key} ||= [];
 	# yes, an undef or () for $length is diff than it not being there at all
 	my @output = defined( $length ) ? CORE::splice( 
@@ -802,7 +803,8 @@ to new() as is.
 sub batch_new {
 	my $class = CORE::shift( @_ );
 	my $case_inse = CORE::shift( @_ ) || 0;
-	my @initializers = ref($_[0]) eq 'ARRAY' ? @{shift(@_)} : CORE::shift(@_);
+	my @initializers = 
+		ref($_[0]) eq 'ARRAY' ? @{CORE::shift(@_)} : CORE::shift(@_);
 	my @new_mvh = map { $class->new( $case_inse, $_, @_ ) } @initializers;
 	return( wantarray ? @new_mvh : \@new_mvh );
 }
@@ -819,7 +821,7 @@ sub _reduce_hash_to_subset {    # meant only for internal use
 	my $self = CORE::shift( @_ );
 	my $rh_hash_copy = CORE::shift( @_ );
 	my $ra_keys = CORE::shift( @_ );
-	$ra_keys = (ref($ra_keys) eq 'HASH') ? (keys %{$ra_keys}) : 
+	$ra_keys = (ref($ra_keys) eq 'HASH') ? (CORE::keys %{$ra_keys}) : 
 		UNIVERSAL::isa($ra_keys,'Data::MultiValuedHash') ? $ra_keys->keys() : 
 		(ref($ra_keys) ne 'ARRAY') ? [$ra_keys] : $ra_keys;
 	my $case_inse = $self->{$KEY_CASE_INSE};
@@ -919,7 +921,10 @@ improvements in regards to the case-insensitivity feature, so the documentation
 is easier to understand.
 
 Thanks to Geir Johannessen <geir.johannessen@nextra.com> for alerting me to 
-several "ambiguous call" warnings that don't show up on my Perl but do on his.
+several "ambiguous call" warnings.
+
+Thanks to Jonathan Snyder <jonathan@mail.method.com> for alerting me to some 
+more "ambiguous call" warnings.
 
 =head1 SEE ALSO
 

@@ -1,3 +1,15 @@
+2001-07-16   Darren Duncan <perl@DarrenDuncan.net>
+
+	* Release 1.0703.
+	
+	* This minor release deals with some more "ambiguous call" warnings of the 
+	sort that release 1.07 addressed, since I didn't get to them all in 1.0702.  
+	Both modules are now at version 1.0703.  In CGI::MultiValuedHash, the POD 
+	was updated in Synopsis and The Default File Format; for the latter case, I 
+	hope that I removed ambiguity regarding how compatible my default file 
+	format is with Boulderio.  Thanks to Jonathan Snyder 
+	<jonathan@mail.method.com> for alerting me to the fixed problems.
+
 2001-05-28   Darren Duncan <perl@DarrenDuncan.net>
 
 	* Release 1.0702.

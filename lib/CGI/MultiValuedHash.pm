@@ -17,7 +17,7 @@ require 5.004;
 
 use strict;
 use vars qw($VERSION @ISA);
-$VERSION = '1.0702';
+$VERSION = '1.0703';
 
 ######################################################################
 
@@ -54,13 +54,10 @@ use Data::MultiValuedHash 1.06;
 	my $params = CGI::MultiValuedHash->new( $case_insensitive, 
 		$ENV{'HTTP_COOKIE'} || $ENV{'COOKIE'}, '; ', '&' );
 
-	my $query_string = '';
-	if( $ENV{'REQUEST_METHOD'} =~ /^(GET|HEAD)$/ ) {
-		$query_string = $ENV{'QUERY_STRING'};
-	} else {
-		read( STDIN, $query_string, $ENV{'CONTENT_LENGTH'} );
-	}
-	$params->from_url_encoded_string( $query_string );
+	my $form_data;
+	read( STDIN, $form_data, $ENV{'CONTENT_LENGTH'} );
+	chomp( $form_data );
+	$params->from_url_encoded_string( $form_data );
 	$params->trim_bounding_whitespace();  # clean up user input
 
 	foreach my $key ($params->keys()) {
@@ -647,15 +644,14 @@ The following example shows 4 MVH objects encoded in the default format:
 	=
 	type=submit
 
-It turns out that this file format is identical to that used by the Whitehead
+This file format is identical to that used by CGI.pm when saving its state, so 
+such files could be used and manipulated by either that class or this one as you 
+see fit.  Furthermore, this format is identical to that used by the Whitehead
 Genome Center's data exchange format, and can be manipulated and even databased
 using Boulderio utilities.  (That may not be url-escaped, however.)  See
 "http://www.genome.wi.mit.edu/genome_software/other/boulder.html" for further
-details.  
-
-Boulderio didn't turn up in any CPAN search, but I found out about it from
-Lincoln D. Stein's documentation for CGI.pm, which itself uses a file format
-identical to this module, when saving its state.
+details.  However, this compatability does not extend to all of Boulderio's 
+features, so Boulderio can store more complex data structures than this class.
 
 =head2 SOME DEVELOPMENT HISTORY
 
@@ -697,7 +693,10 @@ improvements in regards to the case-insensitivity feature, so the documentation
 is easier to understand.
 
 Thanks to Geir Johannessen <geir.johannessen@nextra.com> for alerting me to 
-several "ambiguous call" warnings that don't show up on my Perl but do on his.
+several "ambiguous call" warnings.
+
+Thanks to Jonathan Snyder <jonathan@mail.method.com> for alerting me to the fact 
+that my file format comparison with Boulderio was difficult to understand.
 
 =head1 SEE ALSO
 
