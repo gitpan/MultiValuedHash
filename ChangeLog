@@ -1,3 +1,12 @@
+2001-05-28   Darren Duncan <perl@DarrenDuncan.net>
+
+	* Release 1.0702.
+	
+	* This minor release deals with some more "ambiguous call" warnings of the 
+	sort that release 1.07 addressed, since I didn't get to them all that time.  
+	There are also minor POD updates in this release.  Both modules are now at 
+	version 1.0702.
+
 2001-04-20   Darren Duncan <perl@DarrenDuncan.net>
 
 	* Release 1.0701.

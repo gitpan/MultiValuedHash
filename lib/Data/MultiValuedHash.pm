@@ -17,7 +17,7 @@ require 5.004;
 
 use strict;
 use vars qw($VERSION);
-$VERSION = '1.07';
+$VERSION = '1.0702';
 
 ######################################################################
 
@@ -374,7 +374,7 @@ values.
 
 sub exists {
 	my $self = CORE::shift( @_ );
-	my $key = $self->{$KEY_CASE_INSE} ? lc(shift( @_ )) : CORE::shift( @_ );
+	my $key = $self->{$KEY_CASE_INSE} ? lc(CORE::shift(@_)) : CORE::shift(@_);
 	return( CORE::exists( $self->{$KEY_MAIN_HASH}->{$key} ) );
 }
 
@@ -391,7 +391,7 @@ KEY doesn't exist.
 
 sub count {
 	my $self = CORE::shift( @_ );
-	my $key = $self->{$KEY_CASE_INSE} ? lc(shift( @_ )) : CORE::shift( @_ );
+	my $key = $self->{$KEY_CASE_INSE} ? lc(CORE::shift(@_)) : CORE::shift(@_);
 	CORE::exists( $self->{$KEY_MAIN_HASH}->{$key} ) or return( undef );
 	return( scalar( @{$self->{$KEY_MAIN_HASH}->{$key}} ) );
 }
@@ -410,7 +410,7 @@ doesn't exist.
 
 sub fetch_value {
 	my $self = CORE::shift( @_ );
-	my $key = $self->{$KEY_CASE_INSE} ? lc(shift( @_ )) : CORE::shift( @_ );
+	my $key = $self->{$KEY_CASE_INSE} ? lc(CORE::shift(@_)) : CORE::shift(@_);
 	CORE::exists( $self->{$KEY_MAIN_HASH}->{$key} ) or return( undef );
 	my $index = CORE::shift( @_ ) || 0;
 	return( $self->{$KEY_MAIN_HASH}->{$key}->[$index] );
@@ -430,7 +430,7 @@ a subset of all this key's values that we want returned instead of all of them.
 
 sub fetch {
 	my $self = CORE::shift( @_ );
-	my $key = $self->{$KEY_CASE_INSE} ? lc(shift( @_ )) : CORE::shift( @_ );
+	my $key = $self->{$KEY_CASE_INSE} ? lc(CORE::shift(@_)) : CORE::shift(@_);
 	CORE::exists( $self->{$KEY_MAIN_HASH}->{$key} ) or 
 		return( wantarray ? () : undef );
 	my @values = @{$self->{$KEY_MAIN_HASH}->{$key}};
@@ -580,7 +580,7 @@ count of values that KEY has, which may be more than one greater than before.
 
 sub store_value {
 	my $self = CORE::shift( @_ );
-	my $key = $self->{$KEY_CASE_INSE} ? lc(shift( @_ )) : CORE::shift( @_ );
+	my $key = $self->{$KEY_CASE_INSE} ? lc(CORE::shift(@_)) : CORE::shift(@_);
 	my $value = CORE::shift( @_ );
 	my $index = CORE::shift( @_ ) || 0;
 	$self->{$KEY_MAIN_HASH}->{$key} ||= [];
@@ -603,7 +603,7 @@ to pass an empty ARRAY ref as the VALUES.
 
 sub store {
 	my $self = CORE::shift( @_ );
-	my $key = $self->{$KEY_CASE_INSE} ? lc(shift( @_ )) : CORE::shift( @_ );
+	my $key = $self->{$KEY_CASE_INSE} ? lc(CORE::shift(@_)) : CORE::shift(@_);
 	my @values = (ref( $_[0] ) eq 'ARRAY') ? @{shift( @_ )} : @_;
 	$self->{$KEY_MAIN_HASH}->{$key} = \@values;
 	return( scalar( @{$self->{$KEY_MAIN_HASH}->{$key}} ) );
@@ -653,7 +653,7 @@ the new count of values that KEY has.
 
 sub push {
 	my $self = CORE::shift( @_ );
-	my $key = $self->{$KEY_CASE_INSE} ? lc(shift( @_ )) : CORE::shift( @_ );
+	my $key = $self->{$KEY_CASE_INSE} ? lc(CORE::shift(@_)) : CORE::shift(@_);
 	my @values = (ref( $_[0] ) eq 'ARRAY') ? @{shift( @_ )} : @_;
 	$self->{$KEY_MAIN_HASH}->{$key} ||= [];
 	CORE::push( @{$self->{$KEY_MAIN_HASH}->{$key}}, @values );
@@ -674,7 +674,7 @@ the new count of values that KEY has.
 
 sub unshift {
 	my $self = CORE::shift( @_ );
-	my $key = $self->{$KEY_CASE_INSE} ? lc(shift( @_ )) : CORE::shift( @_ );
+	my $key = $self->{$KEY_CASE_INSE} ? lc(CORE::shift(@_)) : CORE::shift(@_);
 	my @values = (ref( $_[0] ) eq 'ARRAY') ? @{shift( @_ )} : @_;
 	$self->{$KEY_MAIN_HASH}->{$key} ||= [];
 	CORE::unshift( @{$self->{$KEY_MAIN_HASH}->{$key}}, @values );
@@ -694,7 +694,7 @@ returns failure if KEY doesn't exist.
 
 sub pop {
 	my $self = CORE::shift( @_ );
-	my $key = $self->{$KEY_CASE_INSE} ? lc(shift( @_ )) : CORE::shift( @_ );
+	my $key = $self->{$KEY_CASE_INSE} ? lc(CORE::shift(@_)) : CORE::shift(@_);
 	CORE::exists( $self->{$KEY_MAIN_HASH}->{$key} ) or return( undef );
 	return( CORE::pop( @{$self->{$KEY_MAIN_HASH}->{$key}} ) );
 }
@@ -712,7 +712,7 @@ returns failure if KEY doesn't exist.
 
 sub shift {
 	my $self = CORE::shift( @_ );
-	my $key = $self->{$KEY_CASE_INSE} ? lc(shift( @_ )) : CORE::shift( @_ );
+	my $key = $self->{$KEY_CASE_INSE} ? lc(CORE::shift(@_)) : CORE::shift(@_);
 	CORE::exists( $self->{$KEY_MAIN_HASH}->{$key} ) or return( undef );
 	return( CORE::shift( @{$self->{$KEY_MAIN_HASH}->{$key}} ) );
 }
@@ -733,7 +733,7 @@ LENGTH is omitted, the method returns everything from OFFSET onward.
 
 sub splice {
 	my $self = CORE::shift( @_ );
-	my $key = $self->{$KEY_CASE_INSE} ? lc(shift( @_ )) : CORE::shift( @_ );
+	my $key = $self->{$KEY_CASE_INSE} ? lc(CORE::shift(@_)) : CORE::shift(@_);
 	my $offset = CORE::shift( @_ );
 	my $length = CORE::shift( @_ );
 	my @values = (ref( $_[0] ) eq 'ARRAY') ? @{shift( @_ )} : @_;
@@ -758,7 +758,7 @@ doesn't previously exist.
 
 sub delete {
 	my $self = CORE::shift( @_ );
-	my $key = $self->{$KEY_CASE_INSE} ? lc(shift( @_ )) : CORE::shift( @_ );
+	my $key = $self->{$KEY_CASE_INSE} ? lc(CORE::shift(@_)) : CORE::shift(@_);
 	CORE::exists( $self->{$KEY_MAIN_HASH}->{$key} ) or 
 		return( wantarray ? () : undef );
 	my $ra_values = CORE::delete( $self->{$KEY_MAIN_HASH}->{$key} );
@@ -923,6 +923,6 @@ several "ambiguous call" warnings that don't show up on my Perl but do on his.
 
 =head1 SEE ALSO
 
-perl(1), CGI::MultiValuedHash, HTML::FormTemplate, HTML::Application.
+perl(1), CGI::MultiValuedHash, HTML::FormTemplate, CGI::Portable.
 
 =cut

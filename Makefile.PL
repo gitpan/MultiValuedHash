@@ -3,7 +3,7 @@ use ExtUtils::MakeMaker;
 # the contents of the Makefile that is written.
 WriteMakefile(
 	NAME	=> 'MultiValuedHash',
-	VERSION => 1.0701, # finds $VERSION
+	VERSION => 1.0702, # finds $VERSION
 	PREREQ_PM => {
 	},
 );

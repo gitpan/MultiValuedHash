@@ -17,7 +17,7 @@ require 5.004;
 
 use strict;
 use vars qw($VERSION @ISA);
-$VERSION = '1.07';
+$VERSION = '1.0702';
 
 ######################################################################
 
@@ -701,6 +701,6 @@ several "ambiguous call" warnings that don't show up on my Perl but do on his.
 
 =head1 SEE ALSO
 
-perl(1), Data::MultiValuedHash, HTML::FormTemplate, HTML::Application.
+perl(1), Data::MultiValuedHash, HTML::FormTemplate, CGI::Portable.
 
 =cut

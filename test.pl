@@ -8,8 +8,8 @@
 
 BEGIN { $| = 1; print "1..265\n"; }
 END {print "not ok 1\n" unless $loaded;}
-use Data::MultiValuedHash 1.06;
-use CGI::MultiValuedHash 1.06;
+use Data::MultiValuedHash 1.0702;
+use CGI::MultiValuedHash 1.0702;
 $loaded = 1;
 print "ok 1\n";
 use strict;
