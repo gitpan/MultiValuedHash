@@ -1,3 +1,19 @@
+2001-04-12   Darren Duncan <perl@DarrenDuncan.net>
+
+	* Release 1.07.
+	
+	* This release should take care of a number of warnings like 
+	"Ambiguous call resolved as CORE::values()" which appear on some systems 
+	when -w is used.  These spring from the fact that Data::MultiValuedHash 
+	has methods with the same names as the following built-in functions: keys(), 
+	values(), exists(), push(), unshift(), pop(), shift(), delete().  To fix 
+	this, I have changed all such calls to built-in functions so that they 
+	explicitely say CORE::*.  However, the modules were working before, as Perl 
+	seemed to be resolving the ambiguity in the correct way.
+
+	* Thanks to Geir Johannessen (geir.johannessen@nextra.com) for alerting me 
+	to the above warnings.
+
 2001-03-17   Darren Duncan <perl@DarrenDuncan.net>
 
 	* Release 1.06.

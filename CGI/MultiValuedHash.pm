@@ -17,7 +17,7 @@ require 5.004;
 
 use strict;
 use vars qw($VERSION @ISA);
-$VERSION = '1.06';
+$VERSION = '1.07';
 
 ######################################################################
 
@@ -177,13 +177,13 @@ example, SOURCE could be "key1=val1&val2; key2=val3&val4", as is the case with
 ######################################################################
 
 sub to_url_encoded_string {
-	my $self = shift( @_ );
+	my $self = CORE::shift( @_ );
 	my $rh_main_hash = $self->{$KEY_MAIN_HASH};
-	my $delim_kvpair = shift( @_ ) || '&';
-	my $delim_values = shift( @_ );
+	my $delim_kvpair = CORE::shift( @_ ) || '&';
+	my $delim_values = CORE::shift( @_ );
 	my @result;
 
-	foreach my $key (sort keys %{$rh_main_hash}) {
+	foreach my $key (sort (CORE::keys %{$rh_main_hash})) {
 		my $key_enc = $key;
 		$key_enc =~ s/([^\w .-])/'%'.sprintf("%2.2X",ord($1))/ge;
 		$key_enc =~ tr/ /+/;
@@ -195,10 +195,10 @@ sub to_url_encoded_string {
 			$value_enc =~ s/([^\w .-])/'%'.sprintf("%2.2X",ord($1))/ge;
 			$value_enc =~ tr/ /+/;
 
-			push( @values, $value_enc );
+			CORE::push( @values, $value_enc );
 		}
 
-		push( @result, "$key_enc=".( 
+		CORE::push( @result, "$key_enc=".( 
 			$delim_values ? join( $delim_values, @values ) :
 			join( "$delim_kvpair$key_enc=", @values ) 
 		) );
@@ -232,10 +232,10 @@ is "&") or "isindex" queries.
 ######################################################################
 
 sub from_url_encoded_string {
-	my $self = shift( @_ );
-	my $source_str = shift( @_ );
-	my $delim_kvpair = shift( @_ ) || '&';
-	my $delim_values = shift( @_ );
+	my $self = CORE::shift( @_ );
+	my $source_str = CORE::shift( @_ );
+	my $delim_kvpair = CORE::shift( @_ ) || '&';
+	my $delim_values = CORE::shift( @_ );
 	my @source = split( $delim_kvpair, $source_str );
 
 	my $rh_main_hash = $self->{$KEY_MAIN_HASH};
@@ -257,7 +257,7 @@ sub from_url_encoded_string {
 			$value =~ tr/+/ /;
 			$value =~ s/%([0-9a-fA-F]{2})/pack("c",hex($1))/ge;
 		
-			push( @{$rh_main_hash->{$key}}, $value );
+			CORE::push( @{$rh_main_hash->{$key}}, $value );
 		}
 	}
 
@@ -373,10 +373,10 @@ sub to_html_encoded_table {
 	my $rh_main_hash = $self->{$KEY_MAIN_HASH};
 	my @result;
 
-	push( @result, "<TABLE>\n" );
+	CORE::push( @result, "<TABLE>\n" );
 
-	foreach my $key (sort keys %{$rh_main_hash}) {
-		push( @result, "<TR><TD>\n" );
+	foreach my $key (sort (CORE::keys %{$rh_main_hash})) {
+		CORE::push( @result, "<TR><TD>\n" );
 
 		my $key_enc = $key;
 		$key_enc =~ s/&/&amp;/g;
@@ -384,7 +384,7 @@ sub to_html_encoded_table {
 		$key_enc =~ s/>/&gt;/g;
 		$key_enc =~ s/</&lt;/g;
 
-		push( @result, "</TD><TD>\n" );
+		CORE::push( @result, "</TD><TD>\n" );
 
 		my @enc_value_list;
 
@@ -395,16 +395,16 @@ sub to_html_encoded_table {
 			$value_enc =~ s/>/&gt;/g;
 			$value_enc =~ s/</&lt;/g;
 
-			push( @enc_value_list, $value_enc );
+			CORE::push( @enc_value_list, $value_enc );
 		}
 		
-		push( @result, $linebreak ? join( "<BR>\n", @enc_value_list ) : 
+		CORE::push( @result, $linebreak ? join( "<BR>\n", @enc_value_list ) : 
 			join( ", \n", @enc_value_list ) );
 			
-		push( @result, "</TD></TR>\n" );
+		CORE::push( @result, "</TD></TR>\n" );
 	}
 
-	push( @result, "<TABLE>\n" );
+	CORE::push( @result, "<TABLE>\n" );
 
 	return( join( '', @result ) );
 }
@@ -429,11 +429,11 @@ string.
 ######################################################################
 
 sub to_html_encoded_hidden_fields {
-	my $self = shift( @_ );
+	my $self = CORE::shift( @_ );
 	my $rh_main_hash = $self->{$KEY_MAIN_HASH};
 	my @result;
 
-	foreach my $key (sort keys %{$rh_main_hash}) {
+	foreach my $key (sort (CORE::keys %{$rh_main_hash})) {
 		my $key_enc = $key;
 		$key_enc =~ s/&/&amp;/g;
 		$key_enc =~ s/\"/&quot;/g;
@@ -447,7 +447,7 @@ sub to_html_encoded_hidden_fields {
 			$value_enc =~ s/>/&gt;/g;
 			$value_enc =~ s/</&lt;/g;
 
-			push( @result, <<__endquote );
+			CORE::push( @result, <<__endquote );
 <INPUT TYPE="hidden" NAME="$key_enc" VALUE="$value_enc">
 __endquote
 		}
@@ -471,7 +471,7 @@ empty.
 ######################################################################
 
 sub trim_bounding_whitespace {
-	my $self = shift( @_ );
+	my $self = CORE::shift( @_ );
 	foreach my $ra_values (values %{$self->{$KEY_MAIN_HASH}}) {
 		foreach my $value (@{$ra_values}) {
 			$value =~ s/^\s+//;
@@ -498,9 +498,9 @@ written first.
 ######################################################################
 
 sub batch_to_file {
-	my $class = shift( @_ );
-	my $fh = shift( @_ );
-	my @mvh_list = ref($_[0]) eq 'ARRAY' ? @{shift(@_)} : shift(@_);
+	my $class = CORE::shift( @_ );
+	my $fh = CORE::shift( @_ );
+	my @mvh_list = ref($_[0]) eq 'ARRAY' ? @{CORE::shift(@_)} : CORE::shift(@_);
 
 	ref( $fh ) eq 'GLOB' or return( undef );
 	
@@ -537,10 +537,10 @@ on a file-system error, even if some records were read first.
 ######################################################################
 
 sub batch_from_file {
-	my $class = shift( @_ );
-	my $fh = shift( @_ );
-	my $case_inse = shift( @_ );
-	my $max_obj_num = shift( @_ );  # if <= 0, read all records
+	my $class = CORE::shift( @_ );
+	my $fh = CORE::shift( @_ );
+	my $case_inse = CORE::shift( @_ );
+	my $max_obj_num = CORE::shift( @_ );  # if <= 0, read all records
 	my $use_empty = $_[3];  # fourth remaining argument
 
 	ref( $fh ) eq 'GLOB' or return( undef );
@@ -555,7 +555,7 @@ sub batch_from_file {
 
 		defined( $mvh->from_file( $fh, @_ ) ) or return( undef );
 
-		push( @mvh_list, $mvh );
+		CORE::push( @mvh_list, $mvh );
 
 		--$remaining_obj_count != 0 and redo GET_ANOTHER_REC;
 	}	
@@ -565,7 +565,7 @@ sub batch_from_file {
 	# empty last record in our list even if empty records aren't allowed, 
 	# so we get rid of said disallowed here
 	if( !$use_empty and @mvh_list and !$mvh_list[-1]->keys_count() ) {
-		pop( @mvh_list );
+		CORE::pop( @mvh_list );
 	}
 	
 	return( \@mvh_list );
@@ -696,8 +696,11 @@ Thanks to Steve Benson <steve.benson@stanford.edu> for suggesting POD
 improvements in regards to the case-insensitivity feature, so the documentation
 is easier to understand.
 
+Thanks to Geir Johannessen <geir.johannessen@nextra.com> for alerting me to 
+several "ambiguous call" warnings that don't show up on my Perl but do on his.
+
 =head1 SEE ALSO
 
-perl(1), Data::MultiValuedHash, HTML::FormTemplate.
+perl(1), Data::MultiValuedHash, HTML::FormTemplate, HTML::Application.
 
 =cut

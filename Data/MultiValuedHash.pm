@@ -17,7 +17,7 @@ require 5.004;
 
 use strict;
 use vars qw($VERSION);
-$VERSION = '1.06';
+$VERSION = '1.07';
 
 ######################################################################
 
@@ -190,7 +190,7 @@ see the POD for that method for an explanation of them.
 ######################################################################
 
 sub new {
-	my $class = shift( @_ );
+	my $class = CORE::shift( @_ );
 	my $self = bless( {}, ref($class) || $class );
 	$self->initialize( @_ );
 	return( $self );
@@ -220,12 +220,12 @@ is ignored and this object starts off empty.
 ######################################################################
 
 sub initialize {
-	my $self = shift( @_ );
+	my $self = CORE::shift( @_ );
 	$self->{$KEY_MAIN_HASH} = {};
 	$self->{$KEY_CASE_INSE} = 0;
 	if( scalar( @_ ) ) {
-		$self->{$KEY_CASE_INSE} = shift( @_ );
-		my $initializer = shift( @_ );
+		$self->{$KEY_CASE_INSE} = CORE::shift( @_ );
+		my $initializer = CORE::shift( @_ );
 		if( UNIVERSAL::isa($initializer,'Data::MultiValuedHash') or 
 				ref($initializer) eq 'HASH' ) {
 			$self->store_all( $initializer );
@@ -259,8 +259,8 @@ sub clone {
 	ref($clone) eq ref($self) or $clone = bless( {}, ref($self) );
 
 	my $rh_main_hash = $self->{$KEY_MAIN_HASH};
-	$clone->{$KEY_MAIN_HASH} = 
-		{ map { ( $_, [@{$rh_main_hash->{$_}}] ) } keys %{$rh_main_hash} };
+	$clone->{$KEY_MAIN_HASH} = { map { ( $_, [@{$rh_main_hash->{$_}}] ) } 
+		CORE::keys %{$rh_main_hash} };
 
 	$clone->{$KEY_CASE_INSE} = $self->{$KEY_CASE_INSE};
 	
@@ -284,8 +284,8 @@ case-sensitive keys in the order of "sort keys()".
 ######################################################################
 
 sub ignores_case {
-	my $self = shift( @_ );
-	if( defined( my $new_value = shift( @_ ) ) ) {
+	my $self = CORE::shift( @_ );
+	if( defined( my $new_value = CORE::shift( @_ ) ) ) {
 		my $old_value = $self->{$KEY_CASE_INSE};
 		$self->{$KEY_CASE_INSE} = $new_value;
 		if( !$old_value and $new_value ) {  # if conv from sensitiv to insens
@@ -308,8 +308,8 @@ This method returns a list of all this object's keys.
 ######################################################################
 
 sub keys {
-	my $self = shift( @_ );
-	my @keys_list = keys %{$self->{$KEY_MAIN_HASH}};
+	my $self = CORE::shift( @_ );
+	my @keys_list = CORE::keys %{$self->{$KEY_MAIN_HASH}};
 	return( wantarray ? @keys_list : \@keys_list );
 }
 
@@ -324,8 +324,8 @@ This method returns a count of this object's keys.
 ######################################################################
 
 sub keys_count {
-	my $self = shift( @_ );
-	return( scalar( keys %{$self->{$KEY_MAIN_HASH}} ) );
+	my $self = CORE::shift( @_ );
+	return( scalar( CORE::keys %{$self->{$KEY_MAIN_HASH}} ) );
 }
 
 ######################################################################
@@ -339,8 +339,8 @@ This method returns a flattened list of all this object's values.
 ######################################################################
 
 sub values {
-	my $self = shift( @_ );
-	my @values_list = map { @{$_} } values %{$self->{$KEY_MAIN_HASH}};
+	my $self = CORE::shift( @_ );
+	my @values_list = map { @{$_} } CORE::values %{$self->{$KEY_MAIN_HASH}};
 	return( wantarray ? @values_list : \@values_list );
 }
 
@@ -355,9 +355,9 @@ This method returns a count of all this object's values.
 ######################################################################
 
 sub values_count {
-	my $self = shift( @_ );
+	my $self = CORE::shift( @_ );
 	my $count = 0;
-	map { $count += scalar( @{$_} ) } values %{$self->{$KEY_MAIN_HASH}};
+	map { $count += scalar( @{$_} ) } CORE::values %{$self->{$KEY_MAIN_HASH}};
 	return( $count );
 }
 
@@ -373,9 +373,9 @@ values.
 ######################################################################
 
 sub exists {
-	my $self = shift( @_ );
-	my $key = $self->{$KEY_CASE_INSE} ? lc(shift( @_ )) : shift( @_ );
-	return( exists( $self->{$KEY_MAIN_HASH}->{$key} ) );
+	my $self = CORE::shift( @_ );
+	my $key = $self->{$KEY_CASE_INSE} ? lc(shift( @_ )) : CORE::shift( @_ );
+	return( CORE::exists( $self->{$KEY_MAIN_HASH}->{$key} ) );
 }
 
 ######################################################################
@@ -390,9 +390,9 @@ KEY doesn't exist.
 ######################################################################
 
 sub count {
-	my $self = shift( @_ );
-	my $key = $self->{$KEY_CASE_INSE} ? lc(shift( @_ )) : shift( @_ );
-	exists( $self->{$KEY_MAIN_HASH}->{$key} ) or return( undef );
+	my $self = CORE::shift( @_ );
+	my $key = $self->{$KEY_CASE_INSE} ? lc(shift( @_ )) : CORE::shift( @_ );
+	CORE::exists( $self->{$KEY_MAIN_HASH}->{$key} ) or return( undef );
 	return( scalar( @{$self->{$KEY_MAIN_HASH}->{$key}} ) );
 }
 
@@ -409,10 +409,10 @@ doesn't exist.
 ######################################################################
 
 sub fetch_value {
-	my $self = shift( @_ );
-	my $key = $self->{$KEY_CASE_INSE} ? lc(shift( @_ )) : shift( @_ );
-	exists( $self->{$KEY_MAIN_HASH}->{$key} ) or return( undef );
-	my $index = shift( @_ ) || 0;
+	my $self = CORE::shift( @_ );
+	my $key = $self->{$KEY_CASE_INSE} ? lc(shift( @_ )) : CORE::shift( @_ );
+	CORE::exists( $self->{$KEY_MAIN_HASH}->{$key} ) or return( undef );
+	my $index = CORE::shift( @_ ) || 0;
 	return( $self->{$KEY_MAIN_HASH}->{$key}->[$index] );
 }
 
@@ -429,14 +429,15 @@ a subset of all this key's values that we want returned instead of all of them.
 ######################################################################
 
 sub fetch {
-	my $self = shift( @_ );
-	my $key = $self->{$KEY_CASE_INSE} ? lc(shift( @_ )) : shift( @_ );
-	exists( $self->{$KEY_MAIN_HASH}->{$key} ) or return( wantarray ? () : undef );
+	my $self = CORE::shift( @_ );
+	my $key = $self->{$KEY_CASE_INSE} ? lc(shift( @_ )) : CORE::shift( @_ );
+	CORE::exists( $self->{$KEY_MAIN_HASH}->{$key} ) or 
+		return( wantarray ? () : undef );
 	my @values = @{$self->{$KEY_MAIN_HASH}->{$key}};
 	if( defined( $_[0] ) ) {
-		my @indexes = ref( $_[0] ) eq 'ARRAY' ? @{shift( @_ )} : shift( @_ );
+		my @indexes = ref( $_[0] ) eq 'ARRAY' ? @{shift( @_ )} : CORE::shift( @_ );
 		my %indexes = map { ($_ + 0, 1) } @indexes;  # clean up input
-		@indexes = sort keys %indexes;
+		@indexes = sort (CORE::keys %indexes);
 		@values = @values[@indexes];
 	}
 	return( wantarray ? @values : \@values );
@@ -458,11 +459,11 @@ the keys listed in KEYS is returned instead.
 ######################################################################
 
 sub fetch_hash {
-	my $self = shift( @_ );
-	my $index = shift( @_ );
+	my $self = CORE::shift( @_ );
+	my $index = CORE::shift( @_ );
 	my $rh_main_hash = $self->{$KEY_MAIN_HASH};
-	my %hash_copy = 
-		map { ( $_, $rh_main_hash->{$_}->[$index] ) } keys %{$rh_main_hash};
+	my %hash_copy = map { ( $_, $rh_main_hash->{$_}->[$index] ) } 
+		CORE::keys %{$rh_main_hash};
 	if( defined( $_[0] ) ) {
 		$self->_reduce_hash_to_subset( \%hash_copy, @_ );
 	}
@@ -484,7 +485,7 @@ KEYS is returned instead.
 ######################################################################
 
 sub fetch_first {
-	my $self = shift( @_ );
+	my $self = CORE::shift( @_ );
 	my $rh_output = $self->fetch_hash( 0, @_ );
 	return( wantarray ? %{$rh_output} : $rh_output );
 }
@@ -504,7 +505,7 @@ KEYS is returned instead.
 ######################################################################
 
 sub fetch_last {
-	my $self = shift( @_ );
+	my $self = CORE::shift( @_ );
 	my $rh_output = $self->fetch_hash( -1, @_ );
 	return( wantarray ? %{$rh_output} : $rh_output );
 }
@@ -526,18 +527,19 @@ values that we want returned instead of all of them.
 ######################################################################
 
 sub fetch_all {
-	my $self = shift( @_ );
+	my $self = CORE::shift( @_ );
 	my $rh_main_hash = $self->{$KEY_MAIN_HASH};
 	my %hash_copy = 
-		map { ( $_, [@{$rh_main_hash->{$_}}] ) } keys %{$rh_main_hash};
+		map { ( $_, [@{$rh_main_hash->{$_}}] ) } CORE::keys %{$rh_main_hash};
 	if( defined( $_[0] ) ) {
 		$self->_reduce_hash_to_subset( \%hash_copy, @_ );
 	}
 	if( defined( $_[2] ) ) {
 		my @indexes = ref( $_[2] ) eq 'ARRAY' ? @{$_[2]} : $_[2];
 		my %indexes = map { ($_ + 0, 1) } @indexes;  # clean up input
-		@indexes = sort keys %indexes;
-		%hash_copy = map { ($_, [@{$hash_copy{$_}}[@indexes]]) } keys %hash_copy;
+		@indexes = sort (CORE::keys %indexes);
+		%hash_copy = map { ($_, [@{$hash_copy{$_}}[@indexes]]) } 
+			CORE::keys %hash_copy;
 	}
 	return( wantarray ? %hash_copy : \%hash_copy );
 }
@@ -556,7 +558,7 @@ of the new MVH is the same as the current one.
 ######################################################################
 
 sub fetch_mvh {
-	my $self = shift( @_ );
+	my $self = CORE::shift( @_ );
 	my $new_mvh = bless( {}, ref($self) );
 	$new_mvh->{$KEY_MAIN_HASH} = $self->fetch_all( @_ );
 	$new_mvh->{$KEY_CASE_INSE} = $self->{$KEY_CASE_INSE};
@@ -577,10 +579,10 @@ count of values that KEY has, which may be more than one greater than before.
 ######################################################################
 
 sub store_value {
-	my $self = shift( @_ );
-	my $key = $self->{$KEY_CASE_INSE} ? lc(shift( @_ )) : shift( @_ );
-	my $value = shift( @_ );
-	my $index = shift( @_ ) || 0;
+	my $self = CORE::shift( @_ );
+	my $key = $self->{$KEY_CASE_INSE} ? lc(shift( @_ )) : CORE::shift( @_ );
+	my $value = CORE::shift( @_ );
+	my $index = CORE::shift( @_ ) || 0;
 	$self->{$KEY_MAIN_HASH}->{$key} ||= [];
 	$self->{$KEY_MAIN_HASH}->{$key}->[$index] = $value;
 	return( scalar( @{$self->{$KEY_MAIN_HASH}->{$key}} ) );
@@ -600,8 +602,8 @@ to pass an empty ARRAY ref as the VALUES.
 ######################################################################
 
 sub store {
-	my $self = shift( @_ );
-	my $key = $self->{$KEY_CASE_INSE} ? lc(shift( @_ )) : shift( @_ );
+	my $self = CORE::shift( @_ );
+	my $key = $self->{$KEY_CASE_INSE} ? lc(shift( @_ )) : CORE::shift( @_ );
 	my @values = (ref( $_[0] ) eq 'ARRAY') ? @{shift( @_ )} : @_;
 	$self->{$KEY_MAIN_HASH}->{$key} = \@values;
 	return( scalar( @{$self->{$KEY_MAIN_HASH}->{$key}} ) );
@@ -616,25 +618,25 @@ or MVH object containing new keys and values to store in this object.  The value
 associated with each key can be either scalar or an array.  Symantics are the
 same as for calling store() multiple times, once for each KEY. Existing keys and
 values with the same names are replaced.  New keys are added in the order of 
-"sort keys %hash".  This method returns a count of new keys added.
+"sort CORE::keys %hash".  This method returns a count of new keys added.
 
 =cut
 
 ######################################################################
 
 sub store_all {
-	my $self = shift( @_ );
+	my $self = CORE::shift( @_ );
 	my %new = UNIVERSAL::isa( $_[0], 'Data::MultiValuedHash' ) ? 
 		(%{shift( @_ )->{$KEY_MAIN_HASH}}) : 
 		(ref( $_[0] ) eq 'HASH') ? (%{shift( @_ )}) : @_;
 	my $rh_main_hash = $self->{$KEY_MAIN_HASH};
 	my $case_inse = $self->{$KEY_CASE_INSE};
-	foreach my $key (sort keys %new) {
+	foreach my $key (sort (CORE::keys %new)) {
 		my @values = (ref($new{$key}) eq 'ARRAY') ? @{$new{$key}} : $new{$key};
 		$key = lc($key) if( $case_inse );
 		$rh_main_hash->{$key} = \@values;
 	}
-	return( scalar( keys %new ) );
+	return( scalar( CORE::keys %new ) );
 }
 
 ######################################################################
@@ -650,11 +652,11 @@ the new count of values that KEY has.
 ######################################################################
 
 sub push {
-	my $self = shift( @_ );
-	my $key = $self->{$KEY_CASE_INSE} ? lc(shift( @_ )) : shift( @_ );
+	my $self = CORE::shift( @_ );
+	my $key = $self->{$KEY_CASE_INSE} ? lc(shift( @_ )) : CORE::shift( @_ );
 	my @values = (ref( $_[0] ) eq 'ARRAY') ? @{shift( @_ )} : @_;
 	$self->{$KEY_MAIN_HASH}->{$key} ||= [];
-	push( @{$self->{$KEY_MAIN_HASH}->{$key}}, @values );
+	CORE::push( @{$self->{$KEY_MAIN_HASH}->{$key}}, @values );
 	return( scalar( @{$self->{$KEY_MAIN_HASH}->{$key}} ) );
 }
 
@@ -671,11 +673,11 @@ the new count of values that KEY has.
 ######################################################################
 
 sub unshift {
-	my $self = shift( @_ );
-	my $key = $self->{$KEY_CASE_INSE} ? lc(shift( @_ )) : shift( @_ );
+	my $self = CORE::shift( @_ );
+	my $key = $self->{$KEY_CASE_INSE} ? lc(shift( @_ )) : CORE::shift( @_ );
 	my @values = (ref( $_[0] ) eq 'ARRAY') ? @{shift( @_ )} : @_;
 	$self->{$KEY_MAIN_HASH}->{$key} ||= [];
-	unshift( @{$self->{$KEY_MAIN_HASH}->{$key}}, @values );
+	CORE::unshift( @{$self->{$KEY_MAIN_HASH}->{$key}}, @values );
 	return( scalar( @{$self->{$KEY_MAIN_HASH}->{$key}} ) );
 }
 
@@ -691,10 +693,10 @@ returns failure if KEY doesn't exist.
 ######################################################################
 
 sub pop {
-	my $self = shift( @_ );
-	my $key = $self->{$KEY_CASE_INSE} ? lc(shift( @_ )) : shift( @_ );
-	exists( $self->{$KEY_MAIN_HASH}->{$key} ) or return( undef );
-	return( pop( @{$self->{$KEY_MAIN_HASH}->{$key}} ) );
+	my $self = CORE::shift( @_ );
+	my $key = $self->{$KEY_CASE_INSE} ? lc(shift( @_ )) : CORE::shift( @_ );
+	CORE::exists( $self->{$KEY_MAIN_HASH}->{$key} ) or return( undef );
+	return( CORE::pop( @{$self->{$KEY_MAIN_HASH}->{$key}} ) );
 }
 
 ######################################################################
@@ -709,10 +711,10 @@ returns failure if KEY doesn't exist.
 ######################################################################
 
 sub shift {
-	my $self = shift( @_ );
-	my $key = $self->{$KEY_CASE_INSE} ? lc(shift( @_ )) : shift( @_ );
-	exists( $self->{$KEY_MAIN_HASH}->{$key} ) or return( undef );
-	return( shift( @{$self->{$KEY_MAIN_HASH}->{$key}} ) );
+	my $self = CORE::shift( @_ );
+	my $key = $self->{$KEY_CASE_INSE} ? lc(shift( @_ )) : CORE::shift( @_ );
+	CORE::exists( $self->{$KEY_MAIN_HASH}->{$key} ) or return( undef );
+	return( CORE::shift( @{$self->{$KEY_MAIN_HASH}->{$key}} ) );
 }
 
 ######################################################################
@@ -730,16 +732,16 @@ LENGTH is omitted, the method returns everything from OFFSET onward.
 ######################################################################
 
 sub splice {
-	my $self = shift( @_ );
-	my $key = $self->{$KEY_CASE_INSE} ? lc(shift( @_ )) : shift( @_ );
-	my $offset = shift( @_ );
-	my $length = shift( @_ );
+	my $self = CORE::shift( @_ );
+	my $key = $self->{$KEY_CASE_INSE} ? lc(shift( @_ )) : CORE::shift( @_ );
+	my $offset = CORE::shift( @_ );
+	my $length = CORE::shift( @_ );
 	my @values = (ref( $_[0] ) eq 'ARRAY') ? @{shift( @_ )} : @_;
 	$self->{$KEY_MAIN_HASH}->{$key} ||= [];
 	# yes, an undef or () for $length is diff than it not being there at all
-	my @output = defined( $length ) ?   
-		splice( @{$self->{$KEY_MAIN_HASH}->{$key}}, $offset, $length, @values ) : 
-		splice( @{$self->{$KEY_MAIN_HASH}->{$key}}, $offset );
+	my @output = defined( $length ) ? CORE::splice( 
+		@{$self->{$KEY_MAIN_HASH}->{$key}}, $offset, $length, @values ) : 
+		CORE::splice( @{$self->{$KEY_MAIN_HASH}->{$key}}, $offset );
 	return( wantarray ? @output : \@output );
 }
 
@@ -755,10 +757,11 @@ doesn't previously exist.
 ######################################################################
 
 sub delete {
-	my $self = shift( @_ );
-	my $key = $self->{$KEY_CASE_INSE} ? lc(shift( @_ )) : shift( @_ );
-	exists( $self->{$KEY_MAIN_HASH}->{$key} ) or return( wantarray ? () : undef );
-	my $ra_values = delete( $self->{$KEY_MAIN_HASH}->{$key} );
+	my $self = CORE::shift( @_ );
+	my $key = $self->{$KEY_CASE_INSE} ? lc(shift( @_ )) : CORE::shift( @_ );
+	CORE::exists( $self->{$KEY_MAIN_HASH}->{$key} ) or 
+		return( wantarray ? () : undef );
+	my $ra_values = CORE::delete( $self->{$KEY_MAIN_HASH}->{$key} );
 	return( wantarray ? @{$ra_values} : $ra_values );
 }
 
@@ -774,7 +777,7 @@ This method deletes all this object's keys and values and returns them in a hash
 ######################################################################
 
 sub delete_all {
-	my $self = shift( @_ );
+	my $self = CORE::shift( @_ );
 	my $rh_main_hash = $self->{$KEY_MAIN_HASH};
 	$self->{$KEY_MAIN_HASH} = {};
 	return( wantarray ? %{$rh_main_hash} : $rh_main_hash );
@@ -797,9 +800,9 @@ to new() as is.
 ######################################################################
 
 sub batch_new {
-	my $class = shift( @_ );
-	my $case_inse = shift( @_ ) || 0;
-	my @initializers = ref($_[0]) eq 'ARRAY' ? @{shift(@_)} : shift(@_);
+	my $class = CORE::shift( @_ );
+	my $case_inse = CORE::shift( @_ ) || 0;
+	my @initializers = ref($_[0]) eq 'ARRAY' ? @{shift(@_)} : CORE::shift(@_);
 	my @new_mvh = map { $class->new( $case_inse, $_, @_ ) } @initializers;
 	return( wantarray ? @new_mvh : \@new_mvh );
 }
@@ -813,20 +816,20 @@ sub batch_new {
 # kept instead.
 
 sub _reduce_hash_to_subset {    # meant only for internal use
-	my $self = shift( @_ );
-	my $rh_hash_copy = shift( @_ );
-	my $ra_keys = shift( @_ );
+	my $self = CORE::shift( @_ );
+	my $rh_hash_copy = CORE::shift( @_ );
+	my $ra_keys = CORE::shift( @_ );
 	$ra_keys = (ref($ra_keys) eq 'HASH') ? (keys %{$ra_keys}) : 
 		UNIVERSAL::isa($ra_keys,'Data::MultiValuedHash') ? $ra_keys->keys() : 
 		(ref($ra_keys) ne 'ARRAY') ? [$ra_keys] : $ra_keys;
 	my $case_inse = $self->{$KEY_CASE_INSE};
 	my %spec_keys = map { ( $case_inse ? lc($_) : $_ => 1 ) } @{$ra_keys};	
-	if( shift( @_ ) ) {   # want complement of keys list
+	if( CORE::shift( @_ ) ) {   # want complement of keys list
 		%{$rh_hash_copy} = map { !$spec_keys{$_} ? 
-			($_ => $rh_hash_copy->{$_}) : () } keys %{$rh_hash_copy};
+			($_ => $rh_hash_copy->{$_}) : () } CORE::keys %{$rh_hash_copy};
 	} else {
 		%{$rh_hash_copy} = map { $spec_keys{$_} ? 
-			($_ => $rh_hash_copy->{$_}) : () } keys %{$rh_hash_copy};
+			($_ => $rh_hash_copy->{$_}) : () } CORE::keys %{$rh_hash_copy};
 	}
 }
 
@@ -915,8 +918,11 @@ Thanks to Steve Benson <steve.benson@stanford.edu> for suggesting POD
 improvements in regards to the case-insensitivity feature, so the documentation
 is easier to understand.
 
+Thanks to Geir Johannessen <geir.johannessen@nextra.com> for alerting me to 
+several "ambiguous call" warnings that don't show up on my Perl but do on his.
+
 =head1 SEE ALSO
 
-perl(1), CGI::MultiValuedHash, HTML::FormTemplate.
+perl(1), CGI::MultiValuedHash, HTML::FormTemplate, HTML::Application.
 
 =cut
