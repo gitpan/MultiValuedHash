@@ -7,5 +7,3 @@ WriteMakefile(
 	PREREQ_PM => {
 	},
 );
-
-# This file obviously isn't complete.

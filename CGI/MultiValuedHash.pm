@@ -17,7 +17,7 @@ require 5.004;
 
 use strict;
 use vars qw($VERSION @ISA);
-$VERSION = '1.04';
+$VERSION = '1.05';
 
 ######################################################################
 
@@ -33,13 +33,13 @@ $VERSION = '1.04';
 
 =head2 Nonstandard Modules
 
-	Data::MultiValuedHash 1.04 (parent class)
+	Data::MultiValuedHash 1.05 (parent class)
 
 =cut
 
 ######################################################################
 
-use Data::MultiValuedHash 1.04;
+use Data::MultiValuedHash 1.05;
 @ISA = qw( Data::MultiValuedHash );
 
 ######################################################################
@@ -152,30 +152,6 @@ sub _set_hash_with_nonhash_source {
 		$self->from_file( $initializer, @rest );
 	} else {
 		$self->from_url_encoded_string( $initializer, @rest );
-	}
-}
-
-######################################################################
-
-=head2 trim_bounding_whitespace()
-
-This method cleans up all of this object's values by trimming any leading or
-trailing whitespace.  The keys are left alone.  This would normally be done when
-the object is representing user input from a form, including when they entered
-nothing but whitespace, and the program should act like they left the field
-empty.
-
-=cut
-
-######################################################################
-
-sub trim_bounding_whitespace {
-	my $self = shift( @_ );
-	foreach my $ra_values (values %{$self->{$KEY_MAIN_HASH}}) {
-		foreach my $value (@{$ra_values}) {
-			$value =~ s/^\s+//;
-			$value =~ s/\s+$//;
-		}
 	}
 }
 
@@ -480,6 +456,122 @@ __endquote
 	}
 
 	return( join( '', @result ) );
+}
+
+######################################################################
+
+=head2 trim_bounding_whitespace()
+
+This method cleans up all of this object's values by trimming any leading or
+trailing whitespace.  The keys are left alone.  This would normally be done when
+the object is representing user input from a form, including when they entered
+nothing but whitespace, and the program should act like they left the field
+empty.
+
+=cut
+
+######################################################################
+
+sub trim_bounding_whitespace {
+	my $self = shift( @_ );
+	foreach my $ra_values (values %{$self->{$KEY_MAIN_HASH}}) {
+		foreach my $value (@{$ra_values}) {
+			$value =~ s/^\s+//;
+			$value =~ s/\s+$//;
+		}
+	}
+}
+
+######################################################################
+
+=head2 batch_to_file( FH, LIST[, DELIM[, VALSEP[, REC_DELIM[, EMPTY]]]]] )
+
+This batch function writes encoded MVH objects to the filehandle provided in 
+the first argument, FH.  The second argument, LIST, is an array ref containing 
+the MVH objects or hash refs to be written.  Symantecs are similar to calling 
+to_file( FH, * ) once on each MVH object; any remaining arguments are passed 
+on as is to to_file().  If any array elements aren't
+MVHs or HASH refs, they are disregarded.  This method returns
+1 on success, even if there are no objects to write.  It returns undef on a
+file-system error, even if some of the objects were written first.
+
+=cut
+
+######################################################################
+
+sub batch_to_file {
+	my $class = shift( @_ );
+	my $fh = shift( @_ );
+	my @mvh_list = ref($_[0]) eq 'ARRAY' ? @{shift(@_)} : shift(@_);
+
+	ref( $fh ) eq 'GLOB' or return( undef );
+	
+	foreach my $mvh (@mvh_list) {
+		ref( $mvh ) eq 'Data::MultiValuedHash' and 
+			bless( $mvh, 'CGI::MultiValuedHash' );
+		ref( $mvh ) eq 'HASH' and $mvh = 
+			CGI::MultiValuedHash->new( 0, $mvh );
+		ref( $mvh ) eq "CGI::MultiValuedHash" or next;
+		
+		defined( $mvh->to_file( $fh, @_ ) ) or return( undef );
+	}
+	
+	return( 1 );
+}
+
+######################################################################
+
+=head2 batch_from_file( FH, CASE[, MAX[, DELIM[, VALSEP[, REC_DELIM[, EMPTY]]]]] )
+
+This batch function reads encoded MVH objects from the filehandle provided in 
+the first argument, FH, and returns them in a list.  The second argument, CASE, 
+specifies whether the new MVH objects are case-insensitive or not.  The third 
+optional argument, MAX, specifies the maximum number of objects to read.
+  If that argument is undefined or less than 1, then all objects are read
+until the end-of-file is reached.  Symantecs are similar to calling 
+from_file( FH, * ) once on each MVH object; any remaining arguments are passed 
+on as is to from_file().  This method returns an ARRAY ref containing the new 
+records (as MVHs)
+on success, even if the end-of-file is reached before we find any records.  It
+returns undef on a file-system error, even if some records were read first.
+
+=cut
+
+######################################################################
+
+sub batch_from_file {
+	my $class = shift( @_ );
+	my $fh = shift( @_ );
+	my $case_inse = shift( @_ );
+	my $max_obj_num = shift( @_ );  # if <= 0, read all records
+	my $use_empty = $_[3];  # fourth remaining argument
+
+	ref( $fh ) eq 'GLOB' or return( undef );
+	
+	my @mvh_list = ();
+	my $remaining_obj_count = ($max_obj_num <= 0) ? -1 : $max_obj_num;
+
+	GET_ANOTHER_REC: {
+		eof( $fh ) and last;
+
+		my $mvh = CGI::MultiValuedHash->new( $case_inse );
+
+		defined( $mvh->from_file( $fh, @_ ) ) or return( undef );
+
+		push( @mvh_list, $mvh );
+
+		--$remaining_obj_count != 0 and redo GET_ANOTHER_REC;
+	}	
+	
+	# if file is of nonzero length and contains no records, or if it has a 
+	# record separator followed by no records, then we would end up with an 
+	# empty last record in our list even if empty records aren't allowed, 
+	# so we get rid of said disallowed here
+	if( !$use_empty and @mvh_list and !$mvh_list[-1]->keys_count() ) {
+		pop( @mvh_list );
+	}
+	
+	return( \@mvh_list );
 }
 
 ######################################################################

@@ -94,11 +94,9 @@ support issues later, so that users of my modules can help each other with them.
 TO DO
 
 	* Add testing scripts.
-	* Improve the Make File if it needs it.
 	* Remove gratuitous arguments from clone() and implement their functionality 
 	some other way.  This had already been done, but was reversed because 
 	calling code requires those arguments.
-	* Add a splice function, which is noticeably absent.
 	* Add a method like scan() to allow custom processing of the 
 	content using a passed in code ref.
 	* Add another method or three to export a human-readable list of 

@@ -17,7 +17,7 @@ require 5.004;
 
 use strict;
 use vars qw($VERSION);
-$VERSION = '1.04';
+$VERSION = '1.05';
 
 ######################################################################
 
@@ -600,7 +600,7 @@ or MVH object containing new keys and values to store in this object.  The value
 associated with each key can be either scalar or an array.  Symantics are the
 same as for calling store() multiple times, once for each KEY. Existing keys and
 values with the same names are replaced.  New keys are added in the order of 
-"sort keys %hash".
+"sort keys %hash".  This method returns a count of new keys added.
 
 =cut
 
@@ -701,6 +701,32 @@ sub shift {
 
 ######################################################################
 
+=head2 splice( KEY, OFFSET, LENGTH, VALUES )
+
+This method adds a new KEY to this object, if it doesn't already exist. The
+values for KEY at index positions designated by OFFSET and LENGTH are removed,
+and replaced with any VALUES that there may be.  This method returns the elements
+removed from the list of values for KEY, which grows or shrinks as necessary. If
+LENGTH is omitted, the method returns everything from OFFSET onward.
+
+=cut
+
+######################################################################
+
+sub splice {
+	my $self = shift( @_ );
+	my $key = $self->{$KEY_CASE_INSE} ? lc(shift( @_ )) : shift( @_ );
+	my $offset = shift( @_ );
+	my $length = shift( @_ );
+	my @values = (ref( $_[0] ) eq 'ARRAY') ? @{shift( @_ )} : @_;
+	$self->{$KEY_MAIN_HASH}->{$key} ||= [];
+	my @output = splice( @{$self->{$KEY_MAIN_HASH}->{$key}}, 
+		$offset, $length, @values );
+	return( wantarray ? @output : \@output );
+}
+
+######################################################################
+
 =head2 delete( KEY )
 
 This method removes KEY and returns its values.  It returns failure if KEY
@@ -737,6 +763,36 @@ sub delete_all {
 }
 
 ######################################################################
+
+=head2 batch_new( CASE, SOURCE[, *] )
+
+This batch function creates a list of new Data::MultiValuedHash (or subclass)
+objects and returns them.  The symantecs are like calling new() multiple times,
+except that the argument SOURCE is required.  SOURCE is an array and this
+function creates as many MVH objects as there are elements in SOURCE.  The list 
+is returned as an array ref in scalar context and a list in list context.
+CASE defaults to false if undefined.  Any arguments following SOURCE are passed 
+to new() as is.
+
+=cut
+
+######################################################################
+
+sub batch_new {
+	my $class = shift( @_ );
+	my $case_inse = shift( @_ ) || 0;
+	my @initializers = ref($_[0]) eq 'ARRAY' ? @{shift(@_)} : shift(@_);
+	my @new_mvh = map { $class->new( $case_inse, $_, @_ ) } @initializers;
+	return( wantarray ? @new_mvh : \@new_mvh );
+}
+
+######################################################################
+# Call: $self->_reduce_hash_from_subset( $rh_hash, $ra_keys, $is_compl )
+# This method takes a hash reference and filters keys and associated 
+# values from it.  The first argument, $rh_hash, is changed in place.  
+# The second argument $ra_keys is a list to keep; however, if the third 
+# boolean argument $is_compl is true, then the complement of $ra_keys is 
+# kept instead.
 
 sub _reduce_hash_to_subset {    # meant only for internal use
 	my $self = shift( @_ );
@@ -807,6 +863,8 @@ fetch methods.
 	scalar = pop( KEY )
 
 	scalar = shift( KEY )
+	
+	array = splice( KEY, OFFSET, LENGTH, VALUES )
 
 	array = delete( KEY )
 	mvh   = delete_all()

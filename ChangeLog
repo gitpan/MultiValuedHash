@@ -1,3 +1,25 @@
+2001-03-08   Darren Duncan <perl@DarrenDuncan.net>
+
+	* Release 1.05.
+	
+	* Added method splice() to Data::MultiValuedHash so as to round out the set 
+	of standard array manipulation functions.
+	
+	* Added static function batch_new() to Data::HashOfArrays which emulates the 
+	symantecs of calling new() multiple times with a list of initializers; as 
+	many new MVH objects are made as there are elements in the list.
+	
+	* Added programmer documentation to the private method 
+	_reduce_hash_from_subset() so people know how to use this method.  Due to its 
+	private nature, it is not covered in the POD.
+	
+	* Added static functions batch_to_file() and batch_from_file() to 
+	CGI::MultiValuedHash so that an entire list of MVH objects can be written to 
+	or read from a file at once.  Symantecs are similar to calling the to_file() 
+	and from_file() methods.  batch_from_file() will read to the end of the file 
+	by default, but can be restricted by an argument to stop after a certain 
+	number of objects are retrieved.
+
 2001-03-07   Darren Duncan <perl@DarrenDuncan.net>
 
 	* Release 1.04.
