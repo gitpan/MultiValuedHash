@@ -22,7 +22,7 @@ All of my modules have complete POD inside of them, so please refer to that for 
 description of the module itself.
 
 This Read Me document concerns itself mainly with installation and support
-issues, and also includes any "To Do" lists and the file manifest.
+issues, and also includes any "To Do" lists.
 
 KEEPING UP TO DATE
 
@@ -61,18 +61,27 @@ The last step probably won't work if you are not the administrator of your
 machine; in that case you either need to get your administrator to install this 
 for you, or put it in a your own local directory instead.
 
+The Makefile.PL can do this for you if you substitute something like the 
+following for the first line above:
+
+	perl Makefile.PL PREFIX=/tmp/myperl5
+	
+or:
+
+	perl Makefile.PL PREFIX=/home/me/myperl5
+
 If you are on a Mac system and/or you are otherwise having problems with the 
 Makefile, you can still install this module the old fashioned way, by copying.
 
-The files "Data/MultiValuedHash.pm" and "CGI/MultiValuedHash.pm" go inside the 
-"Data" and "CGI" folders respectively, which are in the "lib" folder that came 
-with your Perl 5 distribution.
+The files "lib/Data/MultiValuedHash.pm" and "lib/CGI/MultiValuedHash.pm" go 
+inside the "Data" and "CGI" folders respectively, which are in the "lib" folder 
+that came with your Perl 5 distribution.
 
 Or alternately, put them anywhere you want, but you will need to have that 
 location added to your include path by your main program using something like 
 this:
 
-	use lib '/users/me/www_files/lib';
+	use lib '/home/me/myperl5/lib';
 
 Then you would want to run the included test program to make sure the module is 
 installed correctly.  Call it with:

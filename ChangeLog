@@ -1,3 +1,13 @@
+2001-04-20   Darren Duncan <perl@DarrenDuncan.net>
+
+	* Release 1.0701.
+	
+	* This release should take care of some install problems because the modules 
+	are now inside folders like lib/CGI and lib/Data whereas they were just in 
+	CGI and Data before.  Thanks to Jost (kriegjcb@CMC01SE.rz.ruhr-uni-bochum.de) 
+	for alerting me to this problem.  I'm afraid I still don't know much about 
+	Makefiles.
+	
 2001-04-12   Darren Duncan <perl@DarrenDuncan.net>
 
 	* Release 1.07.
