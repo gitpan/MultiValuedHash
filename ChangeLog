@@ -1,3 +1,40 @@
+2001-03-07   Darren Duncan <perl@DarrenDuncan.net>
+
+	* Release 1.04.
+	
+	* This release is the first one that includes the CPAN standard files 
+	"Makefile.PL" and "MANIFEST", which were all created following 
+	the previous release.  The content of "Manifest" was previously inside the 
+	"ReadMe" file.  Improved the install instructions in my ReadMe file.
+	
+	* Added a hook to the initialize() method in Data::MultiValuedHash for 
+	handling initializers that aren't hashes.  CGI::MultiValuedHash now uses 
+	that hook for handling more initializer types, rather than overloading all 
+	of initialize().
+	
+	* Many small changes were made to methods in Data::MultiValuedHash so that 
+	they work better or the code is more readable.
+	
+	* Added "Method Relationship Overview" section to the POD of Data::MVH.
+	
+	* Changed the ignores_case() method so that you can now change that property.
+	When changing this property from false to true, any existing keys are 
+	lowercased, which can not be reversed (except from a backup).
+	
+	* Added method fetch_hash() to Data::MVH which returns a hash containing 
+	all of the keys and one for each; values are all taken from the array 
+	index specified with an argument.  fetch_first() and fetch_last() have 
+	been changed to use this to implement themselves, since they are the same 
+	except with implicit indexes of 0 or -1.
+	
+	* Added INDEXES argument to fetch() and fetch_all() so that a caller can 
+	restrict a range of values to be returned for each key, much as the KEYS 
+	argument of some methods restrict which keys are returned; the new argument
+	does not have a COMPLEMENT modifier, however. 
+	
+	* Added a method to CGI::MultiValuedHash for outputting the object's keys 
+	and values in an HTML table.
+
 2001-01-03   Darren Duncan <perl@DarrenDuncan.net>
 
 	* Release 1.03.
@@ -17,7 +54,7 @@ CGI::
 		- "libdwg": v1.0 r2000-07-23, v1.11 r2000-08-23
 		- "CGI-FormGenerator": v0.9 r2000-09-04, v0.9201 r2000-12-26
 	
-	* These modules require Perl version 5.004 (although 5.0 may work).
+	* These modules require Perl version 5.004.
 
 	* Code changes since CGI::HashOfArrays consist mainly in its separation into 
 	two modules, named above.  This took care of a longstanding logistical 

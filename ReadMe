@@ -6,7 +6,6 @@ by Darren Duncan <perl@DarrenDuncan.net>
 CONTENTS
 
 * Preface
-* Manifest
 * Keeping Up To Date
 * Requirements
 * Installation
@@ -25,13 +24,6 @@ description of the module itself.
 This Read Me document concerns itself mainly with installation and support
 issues, and also includes any "To Do" lists and the file manifest.
 
-MANIFEST
-
-CGI/MultiValuedHash.pm
-ChangeLog
-Data/MultiValuedHash.pm
-ReadMe
-
 KEEPING UP TO DATE
 
 My module set is constantly under development.  You should be able to find the
@@ -48,39 +40,70 @@ changed.
 REQUIREMENTS
 
 All of my modules require Perl 5.004 or newer, even though only some of them need
-it, in the interest of consistency.
+it, in the interest of consistency.  That said, Perl 5.004 is already 3 years 
+old, is available as a binary on practically every OS that supports Perl at all, 
+and is a very solid release, so I see no reason to support anything older.
+
+Data::MultiValuedHash doesn't require anything else, but CGI::MultiValuedHash 
+does require the former.
 
 INSTALLATION
 
-I haven't gotten around to doing makefiles, so you will have to install these the
-old fashioned way, by copying.  The files "Data/MultiValuedHash.pm" and
-"CGI/MultiValuedHash.pm" go inside the "Data" and "CGI" folders respectively,
-which are in the "lib" folder that came with your Perl 5 distribution.  Or
-alternately, put them anywhere you want, but you will need to have that location
-added to your include path by your main program using something like this:
+To install this module, cd to the directory that contains all of the extracted 
+distribution files, including this ReadMe file, and type the following:
+
+	perl Makefile.PL
+	make
+#	make test -- well, normally you'd do that, but the file's not here yet
+	make install
+
+The last step probably won't work if you are not the administrator of your 
+machine; in that case you either need to get your administrator to install this 
+for you, or put it in a your own local directory instead.
+
+If you are on a Mac system and/or you are otherwise having problems with the 
+Makefile, you can still install this module the old fashioned way, by copying.
+
+The files "Data/MultiValuedHash.pm" and "CGI/MultiValuedHash.pm" go inside the 
+"Data" and "CGI" folders respectively, which are in the "lib" folder that came 
+with your Perl 5 distribution.
+
+Or alternately, put them anywhere you want, but you will need to have that 
+location added to your include path by your main program using something like 
+this:
 
 	use lib '/users/me/www_files/lib';
 
-Any existing POD is embedded in the module itself, so you will have to look there
-to see it, or run a POD extractor on it yourself, or look at the copy on CPAN
-that is dutifully extracted and turned to HTML.
+Then you would want to run the included test program to make sure the module is 
+installed correctly.  Call it with:
+
+#	perl test.pl -- well, normally you'd do that, but the file's not here yet
+
+Any existing POD is embedded in the module itself.  The Makefile probably 
+extracted it for you in the usual manner, or you can run a POD extractor on it 
+yourself to the same effect.  You can also find an HTMLized copy of the POD on 
+CPAN and other public source archives; I link to one copy of it on my web site.
 
 SUPPORT
 
 Currently I don't have any support arranged with other people, lists, newsgroups,
 or otherwise.  Feel free to ask me if you can't figure things out on your own, or
-another person whom you know has used this.
+another person whom you know has used this.  I may start a mailing list for 
+support issues later, so that users of my modules can help each other with them.
 
 TO DO
 
-	* Add a Make File to the distribution.
 	* Add testing scripts.
-	* Allow changing of "ignores case" attribute without reinitializing
+	* Improve the Make File if it needs it.
+	* Remove gratuitous arguments from clone() and implement their functionality 
+	some other way.  This had already been done, but was reversed because 
+	calling code requires those arguments.
 	* Add a splice function, which is noticeably absent.
 	* Add a method like scan() to allow custom processing of the 
 	content using a passed in code ref.
-	* Add a method or three to export a human-readable list of 
-	the structure's contents, in html and/or plain text.
+	* Add another method or three to export a human-readable list of 
+	the structure's contents, in html and/or plain text; there is one now.	
+	* Move the modules from Alpha to Beta status.
 
 AUTHOR
 

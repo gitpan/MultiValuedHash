@@ -17,7 +17,7 @@ require 5.004;
 
 use strict;
 use vars qw($VERSION);
-$VERSION = '1.03';
+$VERSION = '1.04';
 
 ######################################################################
 
@@ -115,7 +115,7 @@ $VERSION = '1.03';
 	
 	$oldval = $mv3->delete( 'color' );  # gets rid of color for good
 	$rdump = $mv3->delete_all();  # return everything as hash of arrays, clear
-	
+
 =head1 DESCRIPTION
 
 This Perl 5 object class implements a simple data structure that is similar to a
@@ -172,9 +172,7 @@ context.  Scalar results are returned as themselves, of course.
 
 When case-insensitivity is used, all operations involving hash keys operate with
 lowercased versions, and these are also what is stored.  The default setting of
-the "ignores case" property is false, like with a normal hash, and can only be
-set when the object is reinitialized; changing this setting at other times could
-cause problems where keys no longer match that used to.
+the "ignores case" property is false, like with a normal hash.
 
 =head1 FUNCTIONS AND METHODS
 
@@ -205,9 +203,8 @@ arguments to this method then the first one, CASE, will initialize the
 case-insensitivity attribute, and any subsequent arguments will provide initial
 keys and values for the internal hash.  Nothing is returned.
 
-The first optional argument CASE (scalar) specifies whether this object uses
-case-insensitive keys; the default value is false.  This attribute can not be
-changed later, except by calling the B<initialize()> method.
+The first optional argument CASE (boolean) specifies whether this object uses
+case-insensitive keys; the default value is false.
 
 The second optional argument, SOURCE is used as initial keys and values for this
 object.  If it is a Hash Ref (normal or of arrays), then the store_all( SOURCE )
@@ -222,14 +219,21 @@ is ignored and this object starts off empty.
 sub initialize {
 	my $self = shift( @_ );
 	$self->{$KEY_MAIN_HASH} = {};
-	if( scalar( @_ ) ) {	
+	$self->{$KEY_CASE_INSE} = 0;
+	if( scalar( @_ ) ) {
 		$self->{$KEY_CASE_INSE} = shift( @_ );
 		my $initializer = shift( @_ );
 		if( UNIVERSAL::isa($initializer,'Data::MultiValuedHash') or 
 				ref($initializer) eq 'HASH' ) {
 			$self->store_all( $initializer );
+		} else {
+			$self->_set_hash_with_nonhash_source( $initializer, @_ );
 		}
 	}
+}
+
+# method can be overloaded by subclass; assumes main hash empty
+sub _set_hash_with_nonhash_source {
 }
 
 ######################################################################
@@ -270,9 +274,15 @@ sub clone {
 
 ######################################################################
 
-=head2 ignores_case()
+=head2 ignores_case([ VALUE ])
 
-This method returns true if this object uses case-insensitive keys.
+This method is an accessor for the boolean "case insensitive" property of this
+object, which it returns.  If VALUE is defined, this property is set to it.  
+
+If the property is being changed from false to true, then any existing keys will 
+be lowercased, and where name collisions occur, the values will be combined.
+The order of these new values is determined by iterating over the original 
+case-sensitive keys in the order of "sort keys()".
 
 =cut
 
@@ -280,6 +290,15 @@ This method returns true if this object uses case-insensitive keys.
 
 sub ignores_case {
 	my $self = shift( @_ );
+	if( defined( my $new_value = shift( @_ ) ) ) {
+		my $old_value = $self->{$KEY_CASE_INSE};
+		$self->{$KEY_CASE_INSE} = $new_value;
+		if( !$old_value and $new_value ) {  # if conv from sensitiv to insens
+			my $rh_main_hash = $self->{$KEY_MAIN_HASH};
+			$self->{$KEY_MAIN_HASH} = {};
+			$self->store_all( $rh_main_hash );
+		}
+	}
 	return( $self->{$KEY_CASE_INSE} );
 }
 
@@ -378,26 +397,8 @@ KEY doesn't exist.
 sub count {
 	my $self = shift( @_ );
 	my $key = $self->{$KEY_CASE_INSE} ? lc(shift( @_ )) : shift( @_ );
-	my $ra_values = $self->{$KEY_MAIN_HASH}->{$key};
-	return( defined( $ra_values ) ? scalar( @{$ra_values} ) : undef );
-}
-
-######################################################################
-
-=head2 fetch( KEY )
-
-This method returns a list of all values that KEY has.  It returns failure if KEY
-doesn't exist.
-
-=cut
-
-######################################################################
-
-sub fetch {
-	my $self = shift( @_ );
-	my $key = $self->{$KEY_CASE_INSE} ? lc(shift( @_ )) : shift( @_ );
-	my $ra_values = $self->{$KEY_MAIN_HASH}->{$key} or return;
-	return( wantarray ? @{$ra_values} : [@{$ra_values}] );
+	exists( $self->{$KEY_MAIN_HASH}->{$key} ) or return( undef );
+	return( scalar( @{$self->{$KEY_MAIN_HASH}->{$key}} ) );
 }
 
 ######################################################################
@@ -415,9 +416,62 @@ doesn't exist.
 sub fetch_value {
 	my $self = shift( @_ );
 	my $key = $self->{$KEY_CASE_INSE} ? lc(shift( @_ )) : shift( @_ );
+	exists( $self->{$KEY_MAIN_HASH}->{$key} ) or return( undef );
 	my $index = shift( @_ ) || 0;
-	my $ra_values = $self->{$KEY_MAIN_HASH}->{$key} or return;
-	return( $ra_values->[$index] );
+	return( $self->{$KEY_MAIN_HASH}->{$key}->[$index] );
+}
+
+######################################################################
+
+=head2 fetch( KEY[, INDEXES] )
+
+This method returns a list of all values that KEY has.  It returns failure if KEY
+doesn't exist.  The first optional argument, INDEXES, is an array ref that specifies 
+a subset of all this key's values that we want returned instead of all of them.
+
+=cut
+
+######################################################################
+
+sub fetch {
+	my $self = shift( @_ );
+	my $key = $self->{$KEY_CASE_INSE} ? lc(shift( @_ )) : shift( @_ );
+	exists( $self->{$KEY_MAIN_HASH}->{$key} ) or return( wantarray ? () : undef );
+	my @values = @{$self->{$KEY_MAIN_HASH}->{$key}};
+	if( defined( $_[0] ) ) {
+		my @indexes = ref( $_[0] ) eq 'ARRAY' ? @{shift( @_ )} : shift( @_ );
+		my %indexes = map { ($_ + 0, 1) } @indexes;  # clean up input
+		@indexes = sort keys %indexes;
+		@values = @values[@indexes];
+	}
+	return( wantarray ? @values : \@values );
+}
+
+######################################################################
+
+=head2 fetch_hash([ INDEX[, KEYS[, COMPLEMENT]] ])
+
+This method returns a hash with all this object's keys and a single value of 
+each key, which is at INDEX position in the internal array of values for the 
+key; the default INDEX is 0.  The first optional argument, KEYS, is an array ref 
+that specifies a subset of all this object's keys that we want returned. If the 
+second optional boolean argument, COMPLEMENT, is true, then the complement of 
+the keys listed in KEYS is returned instead.
+
+=cut
+
+######################################################################
+
+sub fetch_hash {
+	my $self = shift( @_ );
+	my $index = shift( @_ );
+	my $rh_main_hash = $self->{$KEY_MAIN_HASH};
+	my %hash_copy = 
+		map { ( $_, $rh_main_hash->{$_}->[$index] ) } keys %{$rh_main_hash};
+	if( defined( $_[0] ) ) {
+		$self->_reduce_hash_to_subset( \%hash_copy, @_ );
+	}
+	return( wantarray ? %hash_copy : \%hash_copy );
 }
 
 ######################################################################
@@ -436,13 +490,8 @@ KEYS is returned instead.
 
 sub fetch_first {
 	my $self = shift( @_ );
-	my $rh_main_hash = $self->{$KEY_MAIN_HASH};
-	my %hash_copy = 
-		map { ( $_, $rh_main_hash->{$_}->[0] ) } keys %{$rh_main_hash};
-	if( $_[0] ) {
-		$self->_reduce_hash_to_subset( \%hash_copy, @_ );
-	}
-	return( wantarray ? %hash_copy : \%hash_copy );
+	my $rh_output = $self->fetch_hash( 0, @_ );
+	return( wantarray ? %{$rh_output} : $rh_output );
 }
 
 ######################################################################
@@ -461,24 +510,21 @@ KEYS is returned instead.
 
 sub fetch_last {
 	my $self = shift( @_ );
-	my $rh_main_hash = $self->{$KEY_MAIN_HASH};
-	my %hash_copy = 
-		map { ( $_, $rh_main_hash->{$_}->[-1] ) } keys %{$rh_main_hash};
-	if( $_[0] ) {
-		$self->_reduce_hash_to_subset( \%hash_copy, @_ );
-	}
-	return( wantarray ? %hash_copy : \%hash_copy );
+	my $rh_output = $self->fetch_hash( -1, @_ );
+	return( wantarray ? %{$rh_output} : $rh_output );
 }
 
 ######################################################################
 
-=head2 fetch_all([ KEYS[, COMPLEMENT] ])
+=head2 fetch_all([ KEYS[, COMPLEMENT[, INDEXES]] ])
 
 This method returns a hash with all this object's keys and values.  The values
 for each key are contained in an ARRAY ref.  The first optional argument, KEYS,
 is an array ref that specifies a subset of all this object's keys that we want
 returned.  If the second optional boolean argument, COMPLEMENT, is true, then the
-complement of the keys listed in KEYS is returned instead.
+complement of the keys listed in KEYS is returned instead.  The third optional 
+argument, INDEXES, is an array ref that specifies a subset of all of each key's 
+values that we want returned instead of all of them.
 
 =cut
 
@@ -489,31 +535,16 @@ sub fetch_all {
 	my $rh_main_hash = $self->{$KEY_MAIN_HASH};
 	my %hash_copy = 
 		map { ( $_, [@{$rh_main_hash->{$_}}] ) } keys %{$rh_main_hash};
-	if( $_[0] ) {
+	if( defined( $_[0] ) ) {
 		$self->_reduce_hash_to_subset( \%hash_copy, @_ );
 	}
+	if( defined( $_[2] ) ) {
+		my @indexes = ref( $_[2] ) eq 'ARRAY' ? @{$_[2]} : $_[2];
+		my %indexes = map { ($_ + 0, 1) } @indexes;  # clean up input
+		@indexes = sort keys %indexes;
+		%hash_copy = map { ($_, [@{$hash_copy{$_}}[@indexes]]) } keys %hash_copy;
+	}
 	return( wantarray ? %hash_copy : \%hash_copy );
-}
-
-######################################################################
-
-=head2 store( KEY, VALUES )
-
-This method adds a new KEY to this object, if it doesn't already exist. The
-VALUES replace any that may have existed before.  This method returns the new
-count of values that KEY has.  The best way to get a key which has no values is
-to pass an empty ARRAY ref as the VALUES.
-
-=cut
-
-######################################################################
-
-sub store {
-	my $self = shift( @_ );
-	my $key = $self->{$KEY_CASE_INSE} ? lc(shift( @_ )) : shift( @_ );
-	my $ra_values = (ref( $_[0] ) eq 'ARRAY') ? shift( @_ ) : \@_;
-	$self->{$KEY_MAIN_HASH}->{$key} = [@{$ra_values}];
-	return( scalar( @{$self->{$KEY_MAIN_HASH}->{$key}} ) );
 }
 
 ######################################################################
@@ -541,13 +572,35 @@ sub store_value {
 
 ######################################################################
 
-=head2 store_all( SOURCE )
+=head2 store( KEY, VALUES )
 
-This method takes one argument, SOURCE, which is an associative list or hash ref
+This method adds a new KEY to this object, if it doesn't already exist. The
+VALUES replace any that may have existed before.  This method returns the new
+count of values that KEY has.  The best way to get a key which has no values is
+to pass an empty ARRAY ref as the VALUES.
+
+=cut
+
+######################################################################
+
+sub store {
+	my $self = shift( @_ );
+	my $key = $self->{$KEY_CASE_INSE} ? lc(shift( @_ )) : shift( @_ );
+	my @values = (ref( $_[0] ) eq 'ARRAY') ? @{shift( @_ )} : @_;
+	$self->{$KEY_MAIN_HASH}->{$key} = \@values;
+	return( scalar( @{$self->{$KEY_MAIN_HASH}->{$key}} ) );
+}
+
+######################################################################
+
+=head2 store_all( HASH )
+
+This method takes one argument, HASH, which is an associative list or hash ref
 or MVH object containing new keys and values to store in this object.  The value
 associated with each key can be either scalar or an array.  Symantics are the
 same as for calling store() multiple times, once for each KEY. Existing keys and
-values with the same names are replaced.
+values with the same names are replaced.  New keys are added in the order of 
+"sort keys %hash".
 
 =cut
 
@@ -560,11 +613,10 @@ sub store_all {
 		(ref( $_[0] ) eq 'HASH') ? (%{shift( @_ )}) : @_;
 	my $rh_main_hash = $self->{$KEY_MAIN_HASH};
 	my $case_inse = $self->{$KEY_CASE_INSE};
-	foreach my $key (keys %new) {
+	foreach my $key (sort keys %new) {
 		$key = lc($key) if( $case_inse );
-		my $ra_values = (ref($new{$key}) eq 'ARRAY') ? 
-			[@{$new{$key}}] : [$new{$key}];
-		$rh_main_hash->{$key} = $ra_values;
+		my @values = (ref($new{$key}) eq 'ARRAY') ? @{$new{$key}} : $new{$key};
+		$rh_main_hash->{$key} = \@values;
 	}
 	return( scalar( keys %new ) );
 }
@@ -584,9 +636,9 @@ the new count of values that KEY has.
 sub push {
 	my $self = shift( @_ );
 	my $key = $self->{$KEY_CASE_INSE} ? lc(shift( @_ )) : shift( @_ );
-	my $ra_values = (ref( $_[0] ) eq 'ARRAY') ? shift( @_ ) : \@_;
+	my @values = (ref( $_[0] ) eq 'ARRAY') ? @{shift( @_ )} : @_;
 	$self->{$KEY_MAIN_HASH}->{$key} ||= [];
-	push( @{$self->{$KEY_MAIN_HASH}->{$key}}, @{$ra_values} );
+	push( @{$self->{$KEY_MAIN_HASH}->{$key}}, @values );
 	return( scalar( @{$self->{$KEY_MAIN_HASH}->{$key}} ) );
 }
 
@@ -605,9 +657,9 @@ the new count of values that KEY has.
 sub unshift {
 	my $self = shift( @_ );
 	my $key = $self->{$KEY_CASE_INSE} ? lc(shift( @_ )) : shift( @_ );
-	my $ra_values = (ref( $_[0] ) eq 'ARRAY') ? shift( @_ ) : \@_;
+	my @values = (ref( $_[0] ) eq 'ARRAY') ? @{shift( @_ )} : @_;
 	$self->{$KEY_MAIN_HASH}->{$key} ||= [];
-	unshift( @{$self->{$KEY_MAIN_HASH}->{$key}}, @{$ra_values} );
+	unshift( @{$self->{$KEY_MAIN_HASH}->{$key}}, @values );
 	return( scalar( @{$self->{$KEY_MAIN_HASH}->{$key}} ) );
 }
 
@@ -625,8 +677,8 @@ returns failure if KEY doesn't exist.
 sub pop {
 	my $self = shift( @_ );
 	my $key = $self->{$KEY_CASE_INSE} ? lc(shift( @_ )) : shift( @_ );
-	return( exists( $self->{$KEY_MAIN_HASH}->{$key} ) ?
-		pop( @{$self->{$KEY_MAIN_HASH}->{$key}} ) : undef );
+	exists( $self->{$KEY_MAIN_HASH}->{$key} ) or return( undef );
+	return( pop( @{$self->{$KEY_MAIN_HASH}->{$key}} ) );
 }
 
 ######################################################################
@@ -643,8 +695,8 @@ returns failure if KEY doesn't exist.
 sub shift {
 	my $self = shift( @_ );
 	my $key = $self->{$KEY_CASE_INSE} ? lc(shift( @_ )) : shift( @_ );
-	return( exists( $self->{$KEY_MAIN_HASH}->{$key} ) ?
-		shift( @{$self->{$KEY_MAIN_HASH}->{$key}} ) : undef );
+	exists( $self->{$KEY_MAIN_HASH}->{$key} ) or return( undef );
+	return( shift( @{$self->{$KEY_MAIN_HASH}->{$key}} ) );
 }
 
 ######################################################################
@@ -661,6 +713,7 @@ doesn't previously exist.
 sub delete {
 	my $self = shift( @_ );
 	my $key = $self->{$KEY_CASE_INSE} ? lc(shift( @_ )) : shift( @_ );
+	exists( $self->{$KEY_MAIN_HASH}->{$key} ) or return( wantarray ? () : undef );
 	my $ra_values = delete( $self->{$KEY_MAIN_HASH}->{$key} );
 	return( wantarray ? @{$ra_values} : $ra_values );
 }
@@ -693,8 +746,7 @@ sub _reduce_hash_to_subset {    # meant only for internal use
 		UNIVERSAL::isa($ra_keys,'Data::MultiValuedHash') ? $ra_keys->keys() : 
 		(ref($ra_keys) ne 'ARRAY') ? [$ra_keys] : $ra_keys;
 	my $case_inse = $self->{$KEY_CASE_INSE};
-	my %spec_keys = 
-		map { ( $case_inse ? lc($_) : $_ => 1 ) } @{$ra_keys};	
+	my %spec_keys = map { ( $case_inse ? lc($_) : $_ => 1 ) } @{$ra_keys};	
 	if( shift( @_ ) ) {   # want complement of keys list
 		%{$rh_hash_copy} = map { !$spec_keys{$_} ? 
 			($_ => $rh_hash_copy->{$_}) : () } keys %{$rh_hash_copy};
@@ -708,6 +760,56 @@ sub _reduce_hash_to_subset {    # meant only for internal use
 
 1;
 __END__
+
+=head1 METHOD RELATIONSHIP OVERVIEW
+
+A MultiValuedHash can be seen conceivably as a table where keys are row indices 
+and each value for the key is a column; the columns indices are in value arrays.
+
+When fetching data, we could remove either one cell at a time, or a whole row or 
+a whole column, or a block of cells making parts of a row and or column.  This 
+diagram indicates the data type that would be returned by methods corresponding 
+to different fetch types:
+
+	      1 v    n v   all v
+	1   k scalar array array
+	n   k hash   mvh   mvh
+	all k hash   mvh   mvh
+
+The following method list indicates the return types of all the standard methods, 
+and how they relate to the conceptual diagram.  Pay particular attention to the 
+fetch methods.
+
+	array  = keys()
+	scalar = keys_count()
+	array  = values()
+	scalar = values_count()
+
+	scalar = exists( KEY )
+
+	scalar = count( KEY )
+
+	scalar = fetch_value( KEY[, INDEX] ) - index=0
+	array  = fetch( KEY[, INDEXES] ) - indexes=all
+	hash   = fetch_hash( INDEX[, KEYS[, COMPLEMENT]] ) - index=0
+		hash = fetch_first([ KEYS[, COMPLEMENT] ]) - index=0
+		hash = fetch_last([ KEYS[, COMPLEMENT] ])  - index=-1
+	mvh    = fetch_all([ KEYS[, COMPLEMENT[, INDEXES ]] ]) - keys=all,ind=all
+
+	store_value( KEY, VALUE[, INDEX] ) - index=0
+	store( KEY, VALUES )
+	store_all( HASH )
+
+	push( KEY, VALUES )
+
+	unshift( KEY, VALUES )
+
+	scalar = pop( KEY )
+
+	scalar = shift( KEY )
+
+	array = delete( KEY )
+	mvh   = delete_all()
 
 =head1 AUTHOR
 

@@ -17,7 +17,7 @@ require 5.004;
 
 use strict;
 use vars qw($VERSION @ISA);
-$VERSION = '1.03';
+$VERSION = '1.04';
 
 ######################################################################
 
@@ -33,13 +33,13 @@ $VERSION = '1.03';
 
 =head2 Nonstandard Modules
 
-	Data::MultiValuedHash 1.03 (parent class)
+	Data::MultiValuedHash 1.04 (parent class)
 
 =cut
 
 ######################################################################
 
-use Data::MultiValuedHash 1.03;
+use Data::MultiValuedHash 1.04;
 @ISA = qw( Data::MultiValuedHash );
 
 ######################################################################
@@ -134,45 +134,24 @@ how to use the preexisting methods.
 
 =head2 initialize([ CASE[, SOURCE[, *]] ])
 
-This method overrides the like-named method in Data::MultiValuedHash by allowing 
-more data types to be used for SOURCE; namely, it adds filehandles and 
-url-encoded strings.  It is backwards compatible.
-
-This method is used by B<new()> to set the initial properties of objects that it
-creates.  Calling it yourself will empty the internal hash.  If you provide
-arguments to this method then the first one, CASE, will initialize the
-case-insensitivity attribute, and any subsequent arguments will provide initial
-keys and values for the internal hash.  Nothing is returned.
-
-The first optional argument CASE (scalar) specifies whether or not the new
-object uses case-insensitive keys or not; the default value is false. This
-attribute can not be changed later, except by calling the B<initialize()> method.
-
-The second optional argument, SOURCE is used as initial keys and values for this
-object.  If it is a Hash Ref (normal or of arrays), then the store_all( SOURCE )
-method is called to handle it.  If the same argument is a MVH object, then its
-keys and values are similarly given to store_all( SOURCE ).  If SOURCE is a valid
-file handle then from_file( SOURCE, * ) is used.  Otherwise, the method
-from_url_encoded_string( SOURCE, * ) is used.
+The above method in Data::MultiValuedHash has hooks which allow subclasses to 
+add more data types to be used for SOURCE; the hook is called if SOURCE is not 
+a Hash ref (normal or of arrays) or an MVH object, which are already handled.
+This class adds the ability to use filehandles and url-encoded strings as SOURCE.
+If SOURCE is a valid file handle then from_file( SOURCE, * ) is used.  Otherwise, 
+the method from_url_encoded_string( SOURCE, * ) is used.
 
 =cut
 
 ######################################################################
+# This is the hook, called as _set...source( SOURCE[, *] )
 
-sub initialize {
-	my $self = shift( @_ );
-	$self->{$KEY_MAIN_HASH} = {};
-	if( scalar( @_ ) ) {	
-		$self->{$KEY_CASE_INSE} = shift( @_ );
-		my $initializer = shift( @_ );
-		if( UNIVERSAL::isa($initializer,'Data::MultiValuedHash') or 
-				ref($initializer) eq 'HASH' ) {
-			$self->store_all( $initializer );
-		} elsif( ref($initializer) eq 'GLOB' ) {
-			$self->from_file( $initializer, @_ );
-		} else {
-			$self->from_url_encoded_string( $initializer, @_ );
-		}
+sub _set_hash_with_nonhash_source {
+	my ($self, $initializer, @rest) = @_;
+	if( ref($initializer) eq 'GLOB' ) {
+		$self->from_file( $initializer, @rest );
+	} else {
+		$self->from_url_encoded_string( $initializer, @rest );
 	}
 }
 
@@ -397,6 +376,63 @@ sub from_file {
 	
 		redo GET_ANOTHER_REC;
 	}
+}
+
+######################################################################
+
+=head2 to_html_encoded_table([ LINEBREAK ])
+
+This method returns a scalar containing table html with all of this object's keys 
+and values.  The table has two columns, with keys on the left and values on the 
+right, and each row is one key and its values.  By default, the values appear 
+comma-delimited, but if the optional boolean argument LINEBREAK is true, then 
+the value list is delimited with <BR> tags instead, putting each value on its own 
+line.  All keys and values are html-escaped such that any occurances of [&,",<,>] 
+are substitued with [&amp;,&quot;,&gt;,&lt;].
+
+=cut
+
+######################################################################
+
+sub to_html_encoded_hidden_fields {
+	my ($self, $linebreak) = @_;
+	my $rh_main_hash = $self->{$KEY_MAIN_HASH};
+	my @result;
+
+	push( @result, "<TABLE>\n" );
+
+	foreach my $key (sort keys %{$rh_main_hash}) {
+		push( @result, "<TR><TD>\n" );
+
+		my $key_enc = $key;
+		$key_enc =~ s/&/&amp;/g;
+		$key_enc =~ s/\"/&quot;/g;
+		$key_enc =~ s/>/&gt;/g;
+		$key_enc =~ s/</&lt;/g;
+
+		push( @result, "</TD><TD>\n" );
+
+		my @enc_value_list;
+
+		foreach my $value (@{$rh_main_hash->{$key}}) {
+			my $value_enc = $value;   # s/// on $value changes original
+			$value_enc =~ s/&/&amp;/g;
+			$value_enc =~ s/\"/&quot;/g;
+			$value_enc =~ s/>/&gt;/g;
+			$value_enc =~ s/</&lt;/g;
+
+			push( @enc_value_list, $value_enc );
+		}
+		
+		push( @result, $linebreak ? join( "<BR>\n", @enc_value_list ) : 
+			join( ", \n", @enc_value_list ) );
+			
+		push( @result, "</TD></TR>\n" );
+	}
+
+	push( @result, "<TABLE>\n" );
+
+	return( join( '', @result ) );
 }
 
 ######################################################################
