@@ -1,0 +1,56 @@
+2001-01-03   Darren Duncan <perl@DarrenDuncan.net>
+
+	* Release 1.03.
+	
+	* This release is the first one following official registrations with 
+	"The Perl 5 Module List".  The updated entries would look like this:
+	
+Data::
+::MultiValuedHash bdpO Hash whose keys have multiple ordered values DUNCAND
+
+CGI::
+::MultiValuedHash bdpO Store and manipulate url-encoded data        DUNCAND
+	
+	* This release contains my "Data::MultiValuedHash" and "CGI::MultiValuedHash" 
+	modules, which were previously a part of the following distributions 
+	under the temporary name of "CGI::HashOfArrays":
+		- "libdwg": v1.0 r2000-07-23, v1.11 r2000-08-23
+		- "CGI-FormGenerator": v0.9 r2000-09-04, v0.9201 r2000-12-26
+	
+	* These modules require Perl version 5.004 (although 5.0 may work).
+
+	* Code changes since CGI::HashOfArrays consist mainly in its separation into 
+	two modules, named above.  This took care of a longstanding logistical 
+	problem concerning whether the module was a generic data structure 
+	or a tool for encoding/decoding CGI data.  The CGI:: module is a subclass of 
+	the Data:: module, so you can use it like you used the old module.
+	Thanks to Johan Vromans <jvromans@squirrel.nl> for suggesting the split.
+	
+	* The POD also received significant updates.  Thanks to Steve Benson 
+	<steve.benson@stanford.edu> for suggesting improvements to initialize().
+	
+	* Added method store_value() to Data::MultiValuedHash.
+	
+2000-12-26   Darren Duncan <perl@DarrenDuncan.net>
+
+	* CGI-FormGenerator 0.9201, the last version of any distribution to include
+CGI::HashOfArrays, was released.
+	
+2000-07-23   Darren Duncan <perl@DarrenDuncan.net>
+
+	* libdwg 1.0, the first version of any distribution to include
+CGI::HashOfArrays, was released on CPAN.
+	
+2000-04-21   Darren Duncan <perl@DarrenDuncan.net>
+
+	* Completed primary development on this module.
+
+2000-01-28   Darren Duncan <perl@DarrenDuncan.net>
+
+	* Began development on the final version of this module.
+	
+	* Module based on a template created by h2xs 1.18.
+
+1999-07-29 thru 1999-11-13
+
+	* Worked on prototype of code that ended up in this module.

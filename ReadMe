@@ -1,0 +1,100 @@
+                     MULTI-VALUED HASH
+----------------------------------------------------------------------
+
+by Darren Duncan <perl@DarrenDuncan.net>
+
+CONTENTS
+
+* Preface
+* Manifest
+* Keeping Up To Date
+* Requirements
+* Installation
+* Support
+* To Do
+* Author
+
+PREFACE
+
+This distribution features the Perl 5 modules named "Data::MultiValuedHash" and 
+"CGI::MultiValuedHash".
+
+All of my modules have complete POD inside of them, so please refer to that for a
+description of the module itself.
+
+This Read Me document concerns itself mainly with installation and support
+issues, and also includes any "To Do" lists and the file manifest.
+
+MANIFEST
+
+CGI/MultiValuedHash.pm
+ChangeLog
+Data/MultiValuedHash.pm
+ReadMe
+
+KEEPING UP TO DATE
+
+My module set is constantly under development.  You should be able to find the
+newest versions at my website, "http://www.DarrenDuncan.net", on the page called
+"Perl Libraries I Made" (name subject to change).  They can also be found on CPAN
+under the author name of "DUNCAND".  
+
+I am inclined to update the copies on my web site more often, but those
+intermediate versions are more likely to have been tested less, and the modules
+may be updated day by day without increasing the version numbers.  However, the
+copies on CPAN are guaranteed to have unique version numbers when the module has
+changed.
+
+REQUIREMENTS
+
+All of my modules require Perl 5.004 or newer, even though only some of them need
+it, in the interest of consistency.
+
+INSTALLATION
+
+I haven't gotten around to doing makefiles, so you will have to install these the
+old fashioned way, by copying.  The files "Data/MultiValuedHash.pm" and
+"CGI/MultiValuedHash.pm" go inside the "Data" and "CGI" folders respectively,
+which are in the "lib" folder that came with your Perl 5 distribution.  Or
+alternately, put them anywhere you want, but you will need to have that location
+added to your include path by your main program using something like this:
+
+	use lib '/users/me/www_files/lib';
+
+Any existing POD is embedded in the module itself, so you will have to look there
+to see it, or run a POD extractor on it yourself, or look at the copy on CPAN
+that is dutifully extracted and turned to HTML.
+
+SUPPORT
+
+Currently I don't have any support arranged with other people, lists, newsgroups,
+or otherwise.  Feel free to ask me if you can't figure things out on your own, or
+another person whom you know has used this.
+
+TO DO
+
+	* Add a Make File to the distribution.
+	* Add testing scripts.
+	* Allow changing of "ignores case" attribute without reinitializing
+	* Add a splice function, which is noticeably absent.
+	* Add a method like scan() to allow custom processing of the 
+	content using a passed in code ref.
+	* Add a method or three to export a human-readable list of 
+	the structure's contents, in html and/or plain text.
+
+AUTHOR
+
+Copyright (c) 1999-2001, Darren R. Duncan. All rights reserved. These modules are
+free software; you can redistribute them and/or modify them under the same terms
+as Perl itself.  However, I do request that their copyright information remains
+attached to the files.  If you modify this module and redistribute a changed
+version then please attach a note listing the modifications.
+
+I am always interested in knowing how my work helps others, so if you put this
+module to use in any of your own code then please send me the URL.  Also, if you
+make modifications to the module because it doesn't work the way you need, please
+send me a copy so that I can roll desirable changes into the main release.
+
+Address comments, suggestions, and bug reports to perl@DarrenDuncan.net.
+
+Share and Enjoy!
