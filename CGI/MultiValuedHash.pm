@@ -17,7 +17,7 @@ require 5.004;
 
 use strict;
 use vars qw($VERSION @ISA);
-$VERSION = '1.05';
+$VERSION = '1.0501';
 
 ######################################################################
 
@@ -370,7 +370,7 @@ are substitued with [&amp;,&quot;,&gt;,&lt;].
 
 ######################################################################
 
-sub to_html_encoded_hidden_fields {
+sub to_html_encoded_table {
 	my ($self, $linebreak) = @_;
 	my $rh_main_hash = $self->{$KEY_MAIN_HASH};
 	my @result;
